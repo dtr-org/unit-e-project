@@ -4,8 +4,8 @@ The goal of this document is to explain with a reasonable level of detail the sp
 # **Block proposal**
 The block proposal is the process to create the next block of the blockchain and it is constituted of three parts: **management of valid proposers**, **selection of block proposer**, and **block proposal** itself.
 
-## Candidate management
-It is necessary to define who is eligible to be a proposer. We will achieve this keeping an hardcoded list of the public keys of the allowed proposers in the code base.
+## Proposer permissioning
+As a safeguard, we will initially use permissioning to whitelist eligible proposers. This will gradually be relaxed. For initial development, we will have a hardcoded list in the codebase of public keys for eligible proposers. The PKI will be managed by administrative transactions.
 
 ## Proposer selection
 We will use a distributed mechanism for choosing proposer, where every proposer node (that owns one of the public key registered in the proposer whitelist) will hash key, next block height, and previous block hash. The node is elected for the current round if the hash result is below a certain threshold (defined so that every whitelisted proposer has the same chance to be elected).

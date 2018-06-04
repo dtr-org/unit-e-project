@@ -31,15 +31,13 @@ while (true) {
 	blockHeight += 1
 }
 ```
+MAX_HASH should change over time to account for a change in number of active proposer.
 
 ## Block proposal
 The elected proposer now has the duty to:
 
 * build a new block including transactions from his mempool
-* create a new coinbase transaction that as input has the previous coinbase unspent so that unspent rewards are accumulating over time in the coinbase.
-* paying rewards from the coinbase input to the validators which had votes included in the new block
-* the proposer is entitled of 1/8 of the reward given to the validators
-* the proposer is allowed to keep the fees
+* create a new coinbase transaction (still to define how this is used)
 * broadcast the new block to the peers
 
 Is not yet defined exactly how rewards to validators and proposers are composed or what is their magnitude, if relative to the total stake at a given time or relative to the staked amount. Such details need to be defined, if not immediately, at least before release.
@@ -101,7 +99,7 @@ dystay_in_epoch # map <dyn_index, epoch_index>
 
 ## 1. Deposit transactions
 
-Casper validators deposit funds into a smart contract. Since we do not have smart contract functionality, we will instead implement a new "deposit" transaction type that locks the funds for a certain amount of `dynasties` and proves that the node is participating in the voting process.
+Casper validators deposit funds into a smart contract. Since we do not have smart contract functionality, we will instead implement a new "deposit" transaction type that locks the funds for a certain amount of `dynasties` and proves that the node is participating in the voting process. There is no other way to spend this transaction than using a logout transaction.
 
 ### 1.1 Deposit transaction data
 
@@ -174,7 +172,7 @@ The `"start_dynasty": cur_dynasty + 2` should give enough time to the deposit to
 
 Votes will be cast with a new type of transaction. All votes should be added to the blockchain, regardless of which fork they support. We have not yet considered how to incentivize proposers to include votes in their blocks; most likely, we will have to set apart separate space in each block for votes (as opposed to regular transactions). For now, we are assuming the (permissioned) proposers will behave properly and include all votes in blocks.
 
-A validator is also supposed to vote once per epoch, if this does not happen then it will be charged of a non-voter fee for being offline. The accumulated fee over time should be then discharged when a node tries to rightfully spend its deposit after logout. Then it will not be able to retrieve the full deposit amount but only the portion remaining after the penalty is applied.
+A validator is also supposed to vote once per epoch, if this does not happen then it will be charged of a non-voter penalty for being offline. The accumulated fee over time should be then discharged when a node tries to rightfully spend its deposit after logout. Then it will not be able to retrieve the full deposit amount but only the portion remaining after the penalty is applied.
 
 ### 2.1 Vote transactions data
 Vote transactions are going to look very different from a normal transaction because there is no real coin spending but their only purpose is to provide the vote information.
@@ -185,7 +183,9 @@ Vote transactions are going to look very different from a normal transaction bec
   * `VOUT` - this should be 0, since the deposit transaction has only one output.
   * `ScriptSig` - this field contains the data `<s, t, h(s), h(t)>` serialized in this order as consecutive bytes.
 * `Output` - No output is needed, nothing is spendable.
-* `Locktime` - must be set at least to `WITHDRAWAL_DELAY`.
+* `Locktime` - is not used.
+
+Since there is no output, no fee is going to be present.
 
 ### 2.2 Validating a vote transaction
 
@@ -199,7 +199,7 @@ Since the internal structure of this transaction is abnormal, most of the normal
 * increment the `total_cur_dyn_deposit`.
 * if enough votes are registered justify the checkpoint and finalize the previous one.
 
-When the vote is included into a block is necessary also to check that the right reward was given to both the validator and the proposer.
+For each valid vote a validator should receive a reward, this is compounded along with the deposit and is part of the stake of the validator. At withdrawal the validator will be able to claim the deposit and all the vote rewards.
 
 ## 3. Slashing transaction
 
@@ -211,22 +211,40 @@ This transaction simply needs to provide the correct inputs to the validator’s
 
 * `version` - is used to distinguish this transaction as a separate type. Its value is 5 for this transaction type.
 * `Input(s)` - the transaction is going to have only one input and this will be the deposit transaction.
-  * `TXID` - is the reference to the deposit transaction.
+  * `TXID` - is the reference to the deposit transaction or the logout transaction.
   * `VOUT` - this should be 0, since the deposit transaction has only one output.
   * `ScriptSig` - this should include the proof of the offending votes (see 1.2).
-* `Output` - As a normal transaction the outputs can be multiple but the first output must "burn" using an `OP_RETURN` in the pubkey at least `SLASHING_BURN_FRACTION` of the deposit.
+* `Output` - as a normal transaction the outputs can be multiple but the first output must "burn" using an `OP_RETURN` in the pubkey at least `SLASHING_BURN_FRACTION` of the deposit.
 * `Locktime` - is not used.
 
 ### 3.2 Validating a slashing transaction
 
-* execute the script as usual to verify that the deposit is unlocked
-* mark the validator as slashed and log it out forcefully
+* execute the script as usual to verify that the deposit is unlocked.
+* mark the validator as slashed and log it out forcefully.
 
-## 4. Logout
-Validators are automatically logged out and their votes are not considered after (`WITHDRAWAL_DELAY` - `LOGOUT_DELAY`). They are then exempted from the duty of voting but they will have to wait till `WITHDRAWAL_DELAY` blocks has passed since the deposit.
+## 4. Logout transaction
+In order to get back the deposit a validator has to send a logout transaction. The block in which this transaction is included is used to set the `end_dynasty` for the validator using `cur_dinasty + LOGOUT_DELAY`.
+
+## 4.1 Logout transaction data
+This transaction is basically the same as a deposit transaction with the exception that only a deposit transaction can be the input.
+
+* `version` - is used to distinguish this transaction as a separate type. Its value is 6 for this transaction type.
+* `Input(s)` - the deposit transaction.
+* `Output` - the transaction has one single output and the `ScriptPubKey` must contain a specific script. The value has to be the same as the deposit. Fees are allowed as usual. It makes sense to pay the transaction to an address under the depositor control.
+  * `ScriptPubKey` this field has to contain a special script that allows slashing (see 1.2). The content of the script must be validated at least by the `proposers`.
+* `Locktime` - is not used.
 
 ## 5. Withdrawal transaction
-This transaction is a simple P2PKH transaction that spends part of the deposit transaction. The only difference is that in order to be valid it has to happen after `WITHDRAWAL_DELAY` and the its value has to be equal to the deposit minus possible non-voter fees.
+This transaction is a special transaction that spends the logout transaction. The only difference is that in order to be valid it has to happen after `WITHDRAWAL_DELAY` and its value has to be equal to the `deposit - non_voter_penalties + vote_rewards`.
+
+## 5.1 Withdrawal transaction data
+This transaction is basically a normal transaction except the fact that has to have a logout transaction as input and that the total amount payed in the output can be different from the original deposit because of penalties and rewards.
+
+* `version` - is used to distinguish this transaction as a separate type. Its value is 7 for this transaction type.
+* `Input(s)` - the logout transaction.
+* `Output` - as a normal transaction the outputs can be multiple.
+* `Locktime` - is not used.
+
 
 # Parameters values
 
@@ -267,4 +285,4 @@ This transaction is a simple P2PKH transaction that spends part of the deposit t
 
 * **slash:** The burning of some amount of a validator's deposit along with an immediate logout from the validator set. Slashing occurs when a validator signs two conflicting vote messages that violate a slashing condition.
 
-* **non-voter fee:** In the case that a validator doesn't vote during an epoch then it should be punished removing a fee from its deposit.
+* **non-voter penalty:** In the case that a validator doesn't vote during an epoch then it should be punished removing a penalty from its deposit.

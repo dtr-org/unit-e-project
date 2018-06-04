@@ -59,7 +59,7 @@ broadcast(myBlock)
 ```
 
 # **Block finalization**
-Blocks are not finalized in Particl or Bitcoin, so this portion of the algorithm will require the most changes. We split the process into four parts: (1) deposit, (2) voting, (3) finalization/rewards, and (4) slashing. Our design decisions here are modeled heavily on the implementation decisions of Casper.
+Blocks are not finalized in Particl or Bitcoin, so this portion of the algorithm will require the most changes. To support this we need few basic functionalities or primitives: (1) deposit, (2) voting, (3) slashing, (4) logout, (5) withdraw. Our design choices are modeled heavily on Casper implementation.
 
 At the moment we don't foresee any changes to the block header or internal structure.
 
@@ -234,10 +234,10 @@ This transaction is basically the same as a deposit transaction with the excepti
   * `ScriptPubKey` this field has to contain a special script that allows slashing (see 1.2). The content of the script must be validated at least by the `proposers`.
 * `Locktime` - is not used.
 
-## 5. Withdrawal transaction
+## 5. Withdrawing transaction
 This transaction is a special transaction that spends the logout transaction. The only difference is that in order to be valid it has to happen after `WITHDRAWAL_DELAY` and its value has to be equal to the `deposit - non_voter_penalties + vote_rewards`.
 
-## 5.1 Withdrawal transaction data
+## 5.1 Withdrawing transaction data
 This transaction is basically a normal transaction except the fact that has to have a logout transaction as input and that the total amount payed in the output can be different from the original deposit because of penalties and rewards.
 
 * `version` - is used to distinguish this transaction as a separate type. Its value is 7 for this transaction type.

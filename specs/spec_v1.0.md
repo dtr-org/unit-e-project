@@ -63,7 +63,7 @@ Blocks are not finalized in Particl or Bitcoin, so this portion of the algorithm
 
 At the moment we don't foresee any changes to the block header or internal structure.
 
-This implementation relies heavily on statefulness of the consensus. This means that all the nodes in order to be able to accept blocks and transactions need to have an up to date view of the whole consensus state. The state structure is drafted with big contributions from the Casper contract code base with some simplifications.
+This implementation relies heavily on statefulness of the consensus. This means that all the nodes in order to be able to accept blocks and transactions need to have an up-to-date view of the whole consensus state. The state structure is drafted with big contributions from the Casper contract code base with some simplifications.
 
 ```bash
 class Validator {
@@ -96,10 +96,9 @@ dynasty # the index of the current dynasty
 dystay_in_epoch # map <dyn_index, epoch_index>
 ```
 
-
 ## 1. Deposit transactions
 
-Casper validators deposit funds into a smart contract. Since we do not have smart contract functionality, we will instead implement a new "deposit" transaction type that locks the funds for a certain amount of `dynasties` and proves that the node is participating in the voting process. There is no other way to spend this transaction than using a logout transaction.
+Casper validators deposit funds into a smart contract. Since we do not directly support smart contracts, we will instead implement a new "deposit" transaction type that locks the funds for a certain amount of `dynasties` and proves that the node is participating in the voting process. There is no other way to spend this transaction than using a logout transaction or a vote transaction.
 
 ### 1.1 Deposit transaction data
 
@@ -111,40 +110,65 @@ Casper validators deposit funds into a smart contract. Since we do not have smar
 
 
 #### 1.2 Deposit script
-```
-# Common P2PKH
-OP_DUP OP_HASH160 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
+In order to provide vote and slash functionalities on top of a deposit transaction we need to extend the current script language with new op_codes.
 
-OP_IF
-OP_TRUE
-OP_ELSE
-
-# The script that allows this tx to be spent by a violation reporter
-OP_PUSHDATA1 PUBKEY
-OP_CHECKVOTESIG # computes pubkey(SIG1) == HASH256(VTX1) AND pubkey(SIG2) == HASH256(VTX2) AND HASH256(VTX1) != HASH256(VTX2) and puts VTX1 - VTX2 - 0 on the stack
-OP_VERIFY
-OP_SLASHABLE # checks if height(VTX1) == height(VTX2) OR (
-        target(VTX1) > target(VTX2) and source(VTX1) < source(VTX2) or
-        target(VTX2) > target(VTX1) and source(VTX2) > source(VTX1)
-        )
-OP_VERIFY
-OP_ENDIF
-```
-for someone to slash the deposit is sufficient to provide a `scriptSig` like
-```
-OP_PUSHDATA1 VTX1
-OP_PUSHDATA1 SIG1
-OP_PUSHDATA1 VTX2
-OP_PUSHDATA1 SIG2
-```
-where `VTXn` is the tuple `<s, t, h(s), h(t)>` so that
+Let's define `VTXn` is the tuple `<s, t, h(s), h(t)>` so that
 ```
 s     is the TXID of any justified checkpoint ("source")
 t     is the TXID of any descendant of 's' ("target")
 h(s)  the block height of s
 h(t)  the block height of t
 ```
-and `SIGn` is the signature from the validator private key of `VTXn`
+and `SIGn` is the signature from the validator private key of `VTXn`.
+
+`OP_CHECKVOTESIG`:
+- consumes the first 3 elements of the stack as <SIG, VTX, PUBKEY>
+- pushes back the result of PUBKEY_DECRYPT(SIG) == HASH256(VTX)
+
+`OP_SLASHABLE`:
+- consumes the first 5 elements of the stack as <SIG1, VTX1, SIG2, VTX2, PUBKEY>
+- executes OP_CHECKSIG(SIG1,VTX1,PUBKEY)
+- executes OP_CHECKSIG(SIG2,VTX2,PUBKEY)
+- executes SIG1 == SIG2
+- checks
+```python
+height(VTX1) == height(VTX2) or   
+(target(VTX1) > target(VTX2) and source(VTX1) < source(VTX2)  or target(VTX2) > target(VTX1) and source(VTX2) > source(VTX1))
+```
+- pushes back `TRUE` if all the previous checks succeeded, `FALSE` otherwise.
+
+```
+# Vote verification script
+OP_OVER
+OP_OVER
+OP_PUSHDATA1 PUBKEY
+OP_CHECKVOTESIG
+
+OP_IF
+OP_TRUE
+
+OP_ELSE
+# Common P2PKH
+OP_DUP OP_HASH160 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
+
+OP_ELSE
+# The script that allows this tx to be spent by a violation reporter
+OP_PUSHDATA1 PUBKEY
+OP_SLASHABLE
+OP_ENDIF
+```
+using this script in the deposit for someone to slash the deposit is sufficient to provide a `scriptSig` like
+```
+<VTX1> <SIG1> <VTX2> <SIG2>
+```
+for vote and logout operations is simply
+```
+<VTX> <SIG>
+```
+for withdrawing instead a normal P2PKH is sufficient
+```
+<sig> <pubKey>
+```
 
 ## 1.3 Validating a deposit transaction
 When receiving a deposit transaction a node should in addition to the regular transaction checks do the following:
@@ -170,26 +194,35 @@ The `"start_dynasty": cur_dynasty + 2` should give enough time to the deposit to
 
 ## 2. Vote transactions
 
-Votes will be cast with a new type of transaction. All votes should be added to the blockchain, regardless of which fork they support. We have not yet considered how to incentivize proposers to include votes in their blocks; most likely, we will have to set apart separate space in each block for votes (as opposed to regular transactions). For now, we are assuming the (permissioned) proposers will behave properly and include all votes in blocks.
+Votes will be casted with a new type of transaction. All votes should be added to the blockchain, regardless of which fork they support.  
+We have not yet considered how to incentivize proposers to include votes in their blocks; most likely, we will have to set apart separate space in each block for votes (as opposed to regular transactions).  
+For now, we are assuming that the (permissioned) proposers will behave properly and include votes in blocks.
 
-A validator is also supposed to vote once per epoch, if this does not happen then it will be charged of a non-voter penalty for being offline. The accumulated fee over time should be then discharged when a node tries to rightfully spend its deposit after logout. Then it will not be able to retrieve the full deposit amount but only the portion remaining after the penalty is applied.
+A validator is  supposed to vote once per epoch; if this does not happen then it will be charged of s penalty for being offline.  
+The accumulated `offline penalty` over time will be applied when a node tries to rightfully spend its deposit after logout.  
+At withdrawal a validator will be able only to retrieve the portion of the deposit remaining after the total `offline penalties` are applied.
+
+Votes can either spend a deposit transaction, another vote transaction, a logout transaction or a withdraw; for the vote transaction to be valid it is necessary for the only output to have the same `ScriptPubKey` of the spent transaction and a value equal to the spent transaction plus the reward for the vote performed.  
+In this way we will create a chain of transactions with at the beginning a deposit transaction and at the end a withdraw or a slash transaction.  
+Such chain will allow to compound deposit and rewards at each round till a slash or a withdraw happens.
 
 ### 2.1 Vote transactions data
-Vote transactions are going to look very different from a normal transaction because there is no real coin spending but their only purpose is to provide the vote information.
+Vote transactions are a special type of transaction.
 
 * `version` - is used to distinguish this transaction as a separate type. Its value is 4 for this transaction type.
 * `Input(s)` - the transaction is going to have only one input.
-  * `TXID` - is the reference to the deposit transaction.
-  * `VOUT` - this should be 0, since the deposit transaction has only one output.
-  * `ScriptSig` - this field contains the data `<s, t, h(s), h(t)>` serialized in this order as consecutive bytes.
-* `Output` - No output is needed, nothing is spendable.
+  * `TXID` - is the reference to the previous deposit, vote or logout transaction.
+  * `VOUT` - this should be 0, since logout, deposit and vote transactions have only one output.
+  * `ScriptSig` - this field contains the data `<s, t, h(s), h(t), sig>` serialized in this order as consecutive bytes.
+* `Output` - the transaction has a single output and the `ScriptPubKey` must contain a specific script. The value has to be the same as the deposit plus the calculated reward. Fees are not allowed.
+	  * `ScriptPubKey` this field has to contain a special script that allows slashing (see 1.2). The content of the script must be validated at least by the `proposers`.
 * `Locktime` - is not used.
 
-Since there is no output, no fee is going to be present.
+Furthermore a vote transaction can be spent only by a logout transaction, another vote transaction, a slash transaction or a withdraw transaction.
 
 ### 2.2 Validating a vote transaction
 
-Since the internal structure of this transaction is abnormal, most of the normal checks should be skipped (i.e count of inputs and outputs, fees, etc...). Other checks and operations should instead be performed to satisfy the protocol:
+In order to validate a vote transaction a node should:
 
 * check if the validator already voted for this target epoch.
 * check that the target epoch and the target hash are the ones expected.
@@ -210,9 +243,9 @@ In Casper, it is up to the block proposers to include slashing transactions that
 This transaction simply needs to provide the correct inputs to the validator’s deposit transaction, and the outputs are as normal. We are calling this a separate transaction type mainly for readability and ease of parsing in the blockchain; its functionality is not different from standard transactions.
 
 * `version` - is used to distinguish this transaction as a separate type. Its value is 5 for this transaction type.
-* `Input(s)` - the transaction is going to have only one input and this will be the deposit transaction.
-  * `TXID` - is the reference to the deposit transaction or the logout transaction.
-  * `VOUT` - this should be 0, since the deposit transaction has only one output.
+* `Input(s)` - the transaction is going to have only one input and this will be a deposit, vote or logout transaction.
+  * `TXID` - is the reference to a deposit, vote or logout transaction which output is unspent.
+  * `VOUT` - this should be 0.
   * `ScriptSig` - this should include the proof of the offending votes (see 1.2).
 * `Output` - as a normal transaction the outputs can be multiple but the first output must "burn" using an `OP_RETURN` in the pubkey at least `SLASHING_BURN_FRACTION` of the deposit.
 * `Locktime` - is not used.
@@ -223,13 +256,14 @@ This transaction simply needs to provide the correct inputs to the validator’s
 * mark the validator as slashed and log it out forcefully.
 
 ## 4. Logout transaction
-In order to get back the deposit a validator has to send a logout transaction. The block in which this transaction is included is used to set the `end_dynasty` for the validator using `cur_dinasty + LOGOUT_DELAY`.
+In order to get back the deposit a validator has to send a logout transaction.  
+The block in which this transaction is included is used to set the `end_dynasty` for the validator using `cur_dinasty + LOGOUT_DELAY`.
 
 ## 4.1 Logout transaction data
-This transaction is basically the same as a deposit transaction with the exception that only a deposit transaction can be the input.
+This transaction is basically the same as a deposit transaction with the exception that only a deposit or a vote transaction can be the input.
 
 * `version` - is used to distinguish this transaction as a separate type. Its value is 6 for this transaction type.
-* `Input(s)` - the deposit transaction.
+* `Input(s)` - the deposit or vote transaction.
 * `Output` - the transaction has one single output and the `ScriptPubKey` must contain a specific script. The value has to be the same as the deposit. Fees are allowed as usual. It makes sense to pay the transaction to an address under the depositor control.
   * `ScriptPubKey` this field has to contain a special script that allows slashing (see 1.2). The content of the script must be validated at least by the `proposers`.
 * `Locktime` - is not used.
@@ -285,4 +319,4 @@ This transaction is basically a normal transaction except the fact that has to h
 
 * **slash:** The burning of some amount of a validator's deposit along with an immediate logout from the validator set. Slashing occurs when a validator signs two conflicting vote messages that violate a slashing condition.
 
-* **non-voter penalty:** In the case that a validator doesn't vote during an epoch then it should be punished removing a penalty from its deposit.
+* **offline penalty:** In the case that a validator doesn't vote during an epoch then it should be punished removing a penalty from its deposit.

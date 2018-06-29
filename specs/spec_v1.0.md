@@ -264,7 +264,7 @@ This transaction is basically the same as a deposit transaction with the excepti
 
 * `version` - is used to distinguish this transaction as a separate type. Its value is 6 for this transaction type.
 * `Input(s)` - the deposit or vote transaction.
-* `Output` - the transaction has one single output and the `ScriptPubKey` must contain a specific script. The value has to be the same as the deposit. Fees are allowed as usual. It makes sense to pay the transaction to an address under the depositor control.
+* `Output` - the transaction has one single output and the `ScriptPubKey` must contain a specific script. The value has to be the same as the deposit or vote used. Fees are allowed as usual. It makes sense to pay the transaction to an address under the depositor control.
   * `ScriptPubKey` this field has to contain a special script that allows slashing (see 1.2). The content of the script must be validated at least by the `proposers`.
 * `Locktime` - is not used.
 

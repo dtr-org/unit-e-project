@@ -1,7 +1,11 @@
-### CREATE TRANSACTION
+# Description
+
+This document should give an introduction and serve as a guideline in understanding the process of creating a transaction and committing it to the network.  
+The process is explained trying to mediate between readability, completeness and relevance that lead into omitting some minor parts.
+
+# Create transaction
 
 The following is a detailed description of the steps at the moment utilized for creating a `STANDARD` non-witness transaction.  
-The process is explained trying to mediate between readability, completeness and relevance that lead into omitting some minor parts.
 
 ```c++
 CHDWallet::CreateTransaction(std::vector<CTempRecipient>& vecSend,
@@ -72,7 +76,7 @@ CHDWallet::CreateTransaction(std::vector<CTempRecipient>& vecSend,
 
 
 
-  ### COMMIT TRANSACTION
+  # Commit transaction
   After creating the transaction (event though I believe that the steps above go a bit further than that), the next step is to broadcast it to the peers.
 
   ```c++
@@ -100,14 +104,14 @@ CHDWallet::CreateTransaction(std::vector<CTempRecipient>& vecSend,
   - `AcceptToMemoryPool` - run the full transaction validation, for brevity this method is explained separately later
   - `RelayWalletTransaction` -  broadcast a `MSG_TX` to peers
 
-### ADD TO MEMORY POOL
+# Add to memory pool
 
 ```c++
 bool CWalletTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state)
 ```
 
 The above function is through some delegation calling the function below where most of the validation
-of a transaction happens, this is the barrier for a transaction to be included in the mempool
+of a transaction happens, this is the barrier for a transaction to be included in the mempool.
 
 ```c++
 static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams,

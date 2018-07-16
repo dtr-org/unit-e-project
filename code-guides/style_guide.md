@@ -1,3 +1,7 @@
+# C++ Style Guide
+The purpose of this document is to have a common reference to the accepted and common code practices,in order to maintain quality, readability and consistency with the existing codebase.  
+The document is still a work in progress, missing also the integrations from the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
+
 ## If statemets
 Please always use braces around if statements, even for one liners since the case where a `;` is inserted after the
 rightmost parenthesis is basically undetectable and really hard to debug.

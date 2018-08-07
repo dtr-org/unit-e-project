@@ -112,9 +112,8 @@ Casper validators deposit funds into a smart contract. Since we do not directly 
 #### 1.2 Deposit script
 In order to provide vote and slash functionalities on top of a deposit transaction we need to extend the current script language with new op_codes.
 
-Let's define `VTXn` is the tuple `<s, t, h(s), h(t)>` so that
+Let's define `VTXn` is the tuple `<t, h(s), h(t)>` so that
 ```
-s     is the TXID of any justified checkpoint ("source")
 t     is the TXID of any descendant of 's' ("target")
 h(s)  the block height of s
 h(t)  the block height of t

@@ -1,6 +1,5 @@
 # C++ Style Guide
-The purpose of this document is to have a common reference to the accepted and common code practices,in order to maintain quality, readability and consistency with the existing codebase.  
-The document is still a work in progress, missing also the integrations from the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
+The purpose of this document is to add amendments or enhance the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html). Therefore please refer to that for anything that is not explicitly covered in this document.
 
 ##### Table of Contents
 [If statements](#if-statements)  
@@ -63,4 +62,25 @@ Make sure always to use <> notation instead of the "". There is not of a big dif
 
 // DON'T
 #include "chain.h"
+```
+
+## Doxygen comments
+Doxygen multiline comments must be written using `/**`.  
+Doxygen singline comments must be written using `//!`.  
+Document the parameters if not obvious with `@param` and make sure to add the direction using `[in]`, `[out]` or `[in,out]`.  
+The result should be documented using `@return` and imperative tense.
+The main rationale for this is to stick to Bitcoin most used format.
+
+```cpp
+/**
+* This is a comment for Foo()
+* @param[in] param
+* @param[out] pOut
+* @param[in,out] p3
+* @return a result code
+**/
+int Foo(const A& param, B* pOut, int& p3)
+{
+    ...
+}
 ```

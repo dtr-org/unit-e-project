@@ -5,7 +5,7 @@ Created: 2018-08-16
 Accepted: 2018-08-17
 ```
 ## Context
-It is very important to take track of which decisions were taken, when and foremost why.  
+It is very important to keep track of which decisions were taken, when and foremost why.  
 ## Decision
 In order to help document decision processes we adopt the ADR (Architecture Decision Record) system [https://github.com/joelparkerhenderson/architecture_decision_record]().
 

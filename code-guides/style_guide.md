@@ -79,8 +79,21 @@ The main rationale for this is to stick to Bitcoin most used format.
 * @param[in,out] p3
 * @return a result code
 **/
-int Foo(const A& param, B* pOut, int& p3)
+int Foo(const A &param, B *pOut, int &p3)
 {
     ...
 }
+```
+
+## Pointer and Reference Expressions
+When declaring a pointer/reference variable or argument you must put the `* or &` adjacent to the variable name.
+
+```cpp
+// DO
+char *c;
+const string &str;
+
+// DON'T
+char* c;
+const string& str;
 ```

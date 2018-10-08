@@ -7,7 +7,7 @@ Accepted: 2018-08-17
 ## Context
 It is very important to keep track of which decisions were taken, when and foremost why.  
 ## Decision
-In order to help document decision processes we adopt the ADR (Architecture Decision Record) system [https://github.com/joelparkerhenderson/architecture_decision_record]().
+In order to help document decision processes we adopt the [ADR (Architecture Decision Record)](https://github.com/joelparkerhenderson/architecture_decision_record).
 
 Characteristics of a good ADR:  
 - Point in Time - Identify when the Architecture Decision (hereinafter AD) was made

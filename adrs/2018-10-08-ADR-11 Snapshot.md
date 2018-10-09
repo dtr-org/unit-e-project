@@ -47,7 +47,7 @@ CAmount | int64 | 8 | amount the output has
 script size | VarInt | 1-9 | size of the script data
 script data | vector\<unsigned char> | | script data
 
-To calculate the snapshot hash, we concatenate all UTXO sets and compute `SHA256`.
+To calculate the snapshot hash, we concatenate all UTXO sets and compute `SHA256` twice.
 Sample code:
 ```c++
 CSHA256 sha256;

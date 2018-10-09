@@ -39,6 +39,14 @@ output count | VarInt | 1-9 | number of outputs this TX contains
 index | uint32 | 4 | output index
 output | CTxOut | | the actual output
 
+**CTxOut**
+
+field | type | bytes | description
+--- | --- | --- | ---
+CAmount | int64 | 8 | amount the output has
+script size | VarInt | 1-9 | size of the script data
+script data | vector\<unsigned char> | | script data
+
 To calculate the snapshot hash, we concatenate all UTXO sets and compute `SHA256`.
 Sample code:
 ```c++

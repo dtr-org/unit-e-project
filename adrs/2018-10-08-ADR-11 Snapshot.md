@@ -26,9 +26,9 @@ the node needs to know only UTXOs.
 
 ### Snapshot schema (on the disk)
 
-Snapshot is the collection of UTXOSets. The schema of one UTXOSet is the following:
+Snapshot is the collection of UTXOSubset. The schema of one UTXOSubset is the following:
 
-**UTXOSet**
+**UTXOSubset**
 
 field | type | bytes | description
 --- | --- | --- | ---
@@ -47,16 +47,34 @@ CAmount | int64 | 8 | amount the output has
 script size | VarInt | 1-9 | size of the script data
 script data | vector\<unsigned char> | | script data
 
-To calculate the snapshot hash, we concatenate all UTXO sets and compute `SHA256` twice.
-Sample code:
+To calculate the snapshot hash, we use `ECMH(UTXO)` (details about ECMH see AD-10).
+The reason we introduce `UTXO` instead of using `UTXOSubset` for computing the hash
+is that `UTXO` represents one output. It means that we can add/remove outputs even
+without looking into the disk. However, for storing or transmitting the snapshot,
+we use `UTXOSubset` as it's much more compact, we don't need to repeat transaction meta fields.
+
+Scheme of **UTXO**
+
+field | type | bytes | description
+--- | --- | --- | ---
+txId | uint256 | 32 | TX hash
+height | uint32 | 4 | block height the TX was included
+isCoinBase | bool | 1 | set if it's a coinBase TX
+index | uint32 | 4 | output index
+output | CTxOut | | the actual output
+
+Sample code of computing the snapshot hash:
 ```c++
-CSHA256 sha256;
-sha256.Write(utxo_set_0, utxo_set_0_size);
-sha256.Write(utxo_set_1, utxo_set_1_size);
-sha256.Write(utxo_set_n, utxo_set_n_size);
+secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
+secp256k1_multiset multiset;
+secp256k1_multiset_init(ctx, &multiset);
+
+secp256k1_multiset_add(ctx, &multiset, utxo_0.data(), utxo_0.size());
+secp256k1_multiset_add(ctx, &multiset, utxo_1.data(), utxo_1.size());
+secp256k1_multiset_add(ctx, &multiset, utxo_2.data(), utxo_2.size());
 
 uint256 hash;
-sha256.Finalize(hash.begin());
+secp256k1_multiset_finalize(ctx, in.data(), &multiset);
 return hash;
 ```
 Notice: there is no count byte in front of the message.
@@ -64,8 +82,8 @@ Notice: there is no count byte in front of the message.
 ### Snapshot generation
 
 Ideally, we would like to compute the snapshot for every block the node sees. However, computation
-of the snapshot is expensive. It takes roughly 10 minutes to dump all the UTXO sets from the chainstate DB
-and compute the SHA256 hash of it. To overcome this, we will generate the snapshot only for the checkpoint
+of the snapshot is expensive. It takes roughly 20 minutes to dump all the UTXO sets from the chainstate DB
+and compute the ECMH of it. To overcome this, we will generate the snapshot only for the checkpoint
 that can be potentially finalized epoch with the step of `150` epochs. The reason of doing it every 150 epochs is
 to generate the snapshot ~1/day. Current block rate is: `1 block/15 secs or 1/15*60*60*24 = 5760 blocks = 115 epochs`
 
@@ -74,13 +92,12 @@ node takes the levelDB snapshot (iterator of `chainstate`) and tries to generate
 thread. Taking the levelDB iterator, it guarantees that we have the same view of `chainstate` while we are keeping it.
 
 If the snapshot was successfully generated, we store its ID in `chainstate` DB for later retrieval. The node should keep
-last `5` successfully verified snapshots. (Verification is explained in the next section). Validators always
-create snapshots. Proposers can disable snapshot creation by starting the node with flag `-createsnapshot=0`.
+last `5` snapshots. Validators always create snapshots. Proposers can disable snapshot creation by starting the node with flag `-createsnapshot=0`.
 
 ### Snapshot verification
 
 To guarantee that the snapshot is a valid one and other nodes can trust it, we add the snapshot hash to the chain.
-Only `validators` can add the snapshot hash to the chain. Snapshot hash is inside 2nd output of the `Vote` TX.
+Every proposer must include the snapshot hash inside the CoinBase transaction as one of its outputs.
 The schema of the output is the following:
 ```
 CTxOut(
@@ -88,53 +105,37 @@ CTxOut(
     scriptPubKey = OP_RETURN << snapshotHash
 )
 ```
+This output must not be stored in the chainstate as it can't be spent. Therefore it doesn't end up in the snapshot.
 
-Including the snapshot hash is _optional_ and validators should include it only every `150` epochs and this snapshot
-should point to the block height which is `150` epochs ago. The following graph visualizes it:
+Everyone who receives the block must validate that it has the correct snapshot hash.
+Snapshot hash points to the UTXOs of all blocks until the current one.
+To visualize it:
 
 ```
 H - height
-E - epoch
 S - snapshot
 
-       E=149 (S=null)
--------*-------
-blocks | blocks
+H=0 (S=null)
+*-----
+blocks
 
-* at this stage there is no snapshot in the chain
-
-
-       E=150 (S=null)
--------*-------
-blocks | blocks
-
-* at hight 7500 validators start generating the first snapshot
+* genesis block points to the empty snapshot hash
 
 
-           E=150                    E=300            E=301
-           H=7500   H=7501  .....   H=15000 S=0      H=15050
------------*--------*---------------*----------------*
-snapshot 0          | blocks
+H=0        H=1 (S=0)
+*----------*-------
+snapshot 0 | blocks
 
-* validators voted for E=300 and included the snapshot hash which points to E=150
-* snapshot 0 contains UTXO sets until height 7500 (including).
+* at hight 1 coinbase TX points to the snapshot that has only genesis UTXOs
 
 
-           E=150        E=300                        E=450             E=451
-           H=7500 S=0   H=15000 S=0     H=15001      H=22500 S=1       H=22550
------------*------------*---------------*------------*-----------------*
-snapshot 1                              | blocks
+H=0        H=1 (S=0)   H=2 (S=1)
+*----------*-----------*---
+snapshot 1             | blocks
 
-* validators voted for E=450 and included the snapshot hash which points to E=300
-* snapshot 1 contains UTXO sets until height 15000 (including).
+* at height 2 coinbase TX points to the snapshot that has UTXOs from H=0 and H=1
 
 ```
-
-Snapshot hash is considered valid if 2/3 of votes have the same hash
-
-If consensus for the snapshot hash is not reached, nodes that generated such snapshot can delete it.
-Snapshot hash is _optional_ because a validator that started generating it might be not on a fork which
-eventually became finalized. This ADR doesn't propose any penalty for producing incorrect snapshot hash.
 
 ### Initial Snapshot Download (ISD)
 
@@ -156,8 +157,8 @@ Once the node is started in `-isd=1` mode, it will perform the following:
 7. if snapshot hash is incorrect, node bans the peer and restarts the process from step 2
 8. when the last chunk is downloaded node verifies its hash.
 9. if the hash is invalid, the node bans the peer and restarts the process from step 2
-10. node requests blocks which should contain votes for the downloaded snapshot
-11. if there are no 2/3 of votes for the downloaded snapshot node bans the peer and restarts the process from step 2.
+10. node requests the block which is the parent block of the snapshot
+11. if parent block doesn't contains the hash of the snapshot node bans the peer and restarts the process from step 2.
 12. node applies the snapshot and leaves ISD
 
 ### P2P messages
@@ -172,35 +173,36 @@ There are two new P2P messages:
 field | type | bytes | description
 ---   | --- | --- | ---
 bestBlockHash  | uint256 | 32 | at which block the snapshot is created
-utxoSetIndex | uint64 | 8 | index of the first UTXO set in the snapshot
-utxoSetCount | uint16 | 2 | number of UTXO sets to return
+utxoSubsetIndex | uint64 | 8 | index of the first UTXO subset in the snapshot
+utxoSubsetCount | uint16 | 2 | number of UTXO subsets to return
 
 During the initial request:
 * _bestBlockHash_ must be empty
-* _utxoSetIndex_ set to 0
-* _utxoSetCount_ any number larger than 0
+* _utxoSubsetIndex_ set to 0
+* _utxoSubsetCount_ any number larger than 0
 
 After the first chunk of data is received, message should have the following values:
 * _bestBlockHash_ is set according to the response in _snapshot_ message
-* _utxoSetIndex_ is the next starting index to request. `utxoSetIndex = snapshot.utxoSetIndex + snapshot.utxoSetCount`
-* _utxoSetCount_ any number larger than 0
+* _utxoSubsetIndex_ is the next starting index to request. `utxoSubsetIndex = snapshot.utxoSubsetIndex + snapshot.utxoSubsetCount`
+* _utxoSubsetCount_ any number larger than 0
 
 **snapshot**
 
 field | type | bytes | description
 ---   | --- | --- | ---
-snapshotHash  | uint256 | 32 | SHA256 of all UTXO sets
+snapshotHash  | uint256 | 32 | ECMH of all UTXOs
 bestBlockHash  | uint256 | 32 | at which block the snapshot is created
-totalUTXOSets | uint64 | 8 | number of all UTXO sets in the snapshot
-utxoSetIndex | uint64 | 8 | index of the first UTXO set in the snapshot
-utxoSetCount | VarInt | 1-9 | number of UTXO sets in the message
-utxoSets | []UTXOSet | | actual UTXO sets and their outputs
+totalUTXOSubsets | uint64 | 8 | number of all UTXO subsets in the snapshot
+utxoSubsetIndex | uint64 | 8 | index of the first UTXO subset in the snapshot
+utxoSubsetCount | VarInt | 1-9 | number of UTXO subsets in the message
+utxoSubsets | []UTXOSubset | | actual UTXO subsets and their outputs
 
-Once the `snapshot` message has the condition `totalUTXOSets = utxoSetIndex + utxoSetCount`
+Once the `snapshot` message has the condition `totalUTXOSubsets = utxoSubsetIndex + utxoSubsetCount`
 it is considered the last chunk and no more `getsnapshot` messages should be requested.
 
 ## Consequences
 
-1. every node that generates the snapshot, has extra work (10 min to produce the snapshot)
-2. extra disk space usage for full nodes, as they keep the whole chain + 5 snapshots
-3. vote transactions which contain the snapshot hash have one additional output
+1. snapshot hash becomes part of the consensus rule. Everyone needs to perform extra work to compute the hash
+2. extra chain size as we introduce new output to the coinbase
+3. every node that generates the snapshot, has extra work (~20 min to produce the snapshot)
+4. extra disk space usage for full nodes, as they keep the whole chain + 5 snapshots

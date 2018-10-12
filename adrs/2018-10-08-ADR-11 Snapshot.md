@@ -97,15 +97,14 @@ last `5` snapshots. Validators always create snapshots. Proposers can disable sn
 ### Snapshot verification
 
 To guarantee that the snapshot is a valid one and other nodes can trust it, we add the snapshot hash to the chain.
-Every proposer must include the snapshot hash inside the CoinBase transaction as one of its outputs.
-The schema of the output is the following:
+Every proposer must include the snapshot hash inside the CoinBase transaction as part of the script of the first input.
+The schema of the input is the following:
 ```
-CTxOut(
-    nValue = 0,
-    scriptPubKey = OP_RETURN << snapshotHash
+CTxIn(
+    scriptSig = CScript() << nHeight << snapshotHash << OP_0;
 )
 ```
-This output must not be stored in the chainstate as it can't be spent. Therefore it doesn't end up in the snapshot.
+The reason to use input instead of output is to not add this hash to the chainstate and making it larger.
 
 Everyone who receives the block must validate that it has the correct snapshot hash.
 Snapshot hash points to the UTXOs of all blocks until the current one.
@@ -203,6 +202,6 @@ it is considered the last chunk and no more `getsnapshot` messages should be req
 ## Consequences
 
 1. snapshot hash becomes part of the consensus rule. Everyone needs to perform extra work to compute the hash
-2. extra chain size as we introduce new output to the coinbase
-3. every node that generates the snapshot, has extra work (~20 min to produce the snapshot)
-4. extra disk space usage for full nodes, as they keep the whole chain + 5 snapshots
+2. block size increases by 32 bytes as we add snapshot hash to the script of coinbase input
+3. every node that generates the snapshot, has extra work (~20 min to produce the snapshot on the current bitcoin UTXOs)
+4. extra disk space usage for full nodes, as they keep the whole chain + 5 snapshots.

@@ -233,7 +233,7 @@ We also want users to become contributors. That's what is covered in the next se
 
 ### User support and communication
 
-Users will need a way to get support. The core team can help here at the beginning but the only way to scale that is to engage the community. 
+Users will need a way to get support. The core team can help here at the beginning but the only way to scale that is to engage the community.
 
 There is a study about [how the top 100 projects on GitHub do user support](https://github.com/nayafia/user-support). Running an own forum for user support seems to be the most popular option beyond GitHub issues. Other options are mailing lists, IRC, Gitter, Slack, or StackExchange.
 
@@ -385,40 +385,7 @@ According to [GitHub's Open Source Survey in 2017](http://opensourcesurvey.org/2
 
 Creating documentation is essential but it's also essential to establish a low-barrier way for many people to contribute to documentation. Especially with many people contributing, keeping documentation structured takes effort, but it's worth it, because it keeps quality high (addressing the number one issue) and reduces the overall effort to maintain it (because there is less of a mess).
 
-### Documents
-
-* Developer documentation (part of git repo or hosted separately)
-  * Developer guides
-  * API and protocol documentation
-  * Code documentation (Doxygen generated)
-* User documentation
-  * Docs hosted separately
-  * Man pages
-  * Quick start how to run a node
-  * How to run a wallet (include security considerations such as how to keep keys safe)
-* Repo README (central entry point for project)
-
-### Tools
-
-* [ReadTheDocs](https://readthedocs.org/) - Rendering and hosting documentation written in [Markdown](https://daringfireball.net/projects/markdown/syntax), published on push into git repo
-* [Asciidoctor](https://asciidoctor.org/) - Tool to render AsciiDoc, which is similar to Markdown but more powerful (with power also comes some more complexity)
-* [Jekyll](https://jekyllrb.com/) - Popular static site generator, written for blogs, but can also be used for generic web sites and documentation
-* [Hugo](https://gohugo.io/) - Static site generator, suitable for documentation, faster than Jekyll for big sites
-* [GitHub Wiki](https://help.github.com/articles/about-github-wikis/) - GitHub's builtin Wiki backed by git, allows more informal contribution, harder to structure and review
-
-### Examples
-
-Some examples of good documentation from other open source projects.
-
-* [Cosmos](https://cosmos.network/docs/) ([created from Markdown](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/DOCS_README.md))
-* [Docker](https://docs.docker.com/) ([created from Markdown with Jekyll](https://github.com/docker/docker.github.io))
-* [Django](https://docs.djangoproject.com) ([created from reStructuredText with Sphinx](https://docs.djangoproject.com/en/2.1/internals/contributing/writing-documentation/))
-* [Ethereum Homestead](http://www.ethdocs.org) ([created from Markdown with ReadTheDocs](http://www.ethdocs.org/en/latest/about.html))
-
-### Actions
-
-* [Clean up references in doc directory](https://github.com/dtr-org/unit-e-docs/issues/42)
-* [Create list of documentation we need](https://github.com/dtr-org/unit-e-docs/issues/43)
+See [documentation.md](documentation.md) for details about our approach to documentation.
 
 
 ## Translations
@@ -426,6 +393,8 @@ Some examples of good documentation from other open source projects.
 Many end users expect software to be available in their native language. This can be achieved by translating software and documentation targeted at end users. It requires internationalization (i18n), i.e. enabling the software to be translated, as well as localization (l10n), i.e. actually providing translated texts and other adaptions to local norms such as date or number formats.
 
 Documentation and tools targeted as developers are not translated, but English is used as the standard language. While this might provide some barrier for developers who are not fluent in English, it helps a lot with communication as one community.
+
+See [documentation.md](documentation.md) for details about our approach to translating documentation.
 
 ### Actions
 

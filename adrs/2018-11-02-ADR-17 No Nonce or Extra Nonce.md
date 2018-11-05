@@ -1,0 +1,36 @@
+# ADR-17 No Nonce or Extra Nonce
+
+## Context
+
+Bitcoin uses a _nonce_ to implement Proof-of-Work. The nonce is iteratively incremented until
+the block hash meets a certain difficulty. The `nNonce` field is part of a block header (a
+`uint32_t`). 
+
+Since the available search space for nonces is less than the available space for block hashes
+(`2^32` vs `2^256`), miners adopted an _extra nonce_ which is part of the coinbase transaction.
+
+Neither the _nonce_ nor the _extra nonce_ are required in the Proof-of-Stake setting of unit-e.
+
+Particl, Blackcoin, and PeerCoin – which implement Proof-of-Stake – keep the nonce field in
+their blocks. This is due to the fact that they also support Proof-of-Work blocks (which are
+never used though).
+
+In Particl it can be seen (use a block explorer) that the nonce field is actually always `0`.
+
+## Decision
+
+The _nonce_ field is removed from the block header. Support for _extra nonce_ in the coinbase
+transaction is dropped.
+
+## Consequences
+
+Dropping the _extra nonce_ does not have visible effects – the extra nonce is purely an invention
+by miners. Bitcoin core already does not have mining support. The _extra nonce_ in bitcoin core
+is merely used in the block template.
+
+Dropping the _nonce_ field is a change of the header structure. It saves 4 bytes. It requires
+a lot of tests to be touched. It affects the `generate` and `generatetoaddress` rpc calls.
+All of these things need to be touched and changed in order to support Proof-of-Stake properly
+anyway. Also we're touching these things for [ADR-3](https://github.com/dtr-org/unit-e-docs/blob/master/adrs/2018-09-04-ADR-3%20Unit-e%20Block%20Header%20to%20include%20SegWit%20Merkle%20Root.md)
+and for ADR-10 and ADR-11 (which includes the UTXO Set Hash into the coinstake transaction
+and makes it required for validation).

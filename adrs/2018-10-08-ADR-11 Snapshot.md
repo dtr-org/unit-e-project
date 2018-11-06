@@ -32,22 +32,16 @@ Snapshot is the collection of UTXOSubset. The schema of one UTXOSubset is the fo
 
 field | type | bytes | description
 --- | --- | --- | ---
-outPoint | COutPoint | 36 | pointer to the output it spends
+txId | uint256 | 32 | TX hash
 height | uint32 | 4 | block height the TX was included
 isCoinBase | bool | 1 | set if it's a coinBase TX
 output count | VarInt | 1-9 | number of outputs this TX contains
+index | uint32 | 4 | output index
 output | CTxOut | | the actual output
 
 The reason of introducing `UTXOSubset` instead of using `Coin` class is to
 reduce the storage as we don't need to serialize `outPoint`, `height` and `isCoinBase`
 for every output.
-
-**COutPoint**
-
-field | type | bytes | description
---- | --- | --- | ---
-hash | uint256 | 32 | tx hash
-n | uint32 | 4 | index of the output
 
 **CTxOut**
 
@@ -71,6 +65,13 @@ outPoint | COutPoint | 36 | pointer to the output it spends
 height | uint32 | 4 | block height the TX was included
 isCoinBase | bool | 1 | set if it's a coinBase TX
 output | CTxOut | | the actual output
+
+**COutPoint**
+
+field | type | bytes | description
+--- | --- | --- | ---
+hash | uint256 | 32 | tx hash
+n | uint32 | 4 | index of the output
 
 Reasons of picking these fields and their types to compute the hash:
 1. `outPoint` is the identifier of the output by which the `Coin` in levelDB is found.

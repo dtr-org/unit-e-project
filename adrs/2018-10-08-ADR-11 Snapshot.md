@@ -1,8 +1,8 @@
 # ADR-11 Snapshot
 ```
-Status:
+Status: Accepted
 Created: 2018-10-09
-Accepted:
+Accepted: 2018-11-06
 ```
 
 ## Context

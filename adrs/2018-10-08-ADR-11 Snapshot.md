@@ -32,12 +32,22 @@ Snapshot is the collection of UTXOSubset. The schema of one UTXOSubset is the fo
 
 field | type | bytes | description
 --- | --- | --- | ---
-txId | uint256 | 32 | TX hash
+outPoint | COutPoint | 36 | pointer to the output it spends
 height | uint32 | 4 | block height the TX was included
 isCoinBase | bool | 1 | set if it's a coinBase TX
 output count | VarInt | 1-9 | number of outputs this TX contains
-index | uint32 | 4 | output index
 output | CTxOut | | the actual output
+
+The reason of introducing `UTXOSubset` instead of using `Coin` class is to
+reduce the storage as we don't need to serialize `outPoint`, `height` and `isCoinBase`
+for every output.
+
+**COutPoint**
+
+field | type | bytes | description
+--- | --- | --- | ---
+hash | uint256 | 32 | tx hash
+n | uint32 | 4 | index of the output
 
 **CTxOut**
 
@@ -49,19 +59,27 @@ script data | vector\<unsigned char> | | script data
 
 To calculate the snapshot hash, we use `ECMH(UTXO)` (details about ECMH see AD-10).
 The reason we introduce `UTXO` instead of using `UTXOSubset` for computing the hash
-is that `UTXO` represents one output. It means that we can add/remove outputs even
-without looking into the disk. However, for storing or transmitting the snapshot,
-we use `UTXOSubset` as it's much more compact, we don't need to repeat transaction meta fields.
+is that `UTXO` represents one output. It means that we can add/subtract outputs even
+without looking into the disk. The reason of not using the `Coin` class is that
+it doesn't use the standard network serialization.
 
 Scheme of **UTXO**
 
 field | type | bytes | description
 --- | --- | --- | ---
-txId | uint256 | 32 | TX hash
+outPoint | COutPoint | 36 | pointer to the output it spends
 height | uint32 | 4 | block height the TX was included
 isCoinBase | bool | 1 | set if it's a coinBase TX
-index | uint32 | 4 | output index
 output | CTxOut | | the actual output
+
+Reasons of picking these fields and their types to compute the hash:
+1. `outPoint` is the identifier of the output by which the `Coin` in levelDB is found.
+2. `height`, `isCoinBase` and `output` are used because after downloading the
+snapshot, there is no way to check that the following fields were part of the tx hash.
+3. `height` is 32 bits instead of 31 bit (as in the `Coin`) is it's how the height
+is serialized in the `version` P2P message.
+4. `isCoinBase` has 1 byte instead of being part of the height (as in the `Coin`) is
+that it allows us to introduce other TX types in the future without breaking the protocol.
 
 Sample code of computing the snapshot hash:
 ```c++
@@ -101,7 +119,7 @@ Every proposer must include the snapshot hash inside the CoinBase transaction as
 The schema of the input is the following:
 ```
 CTxIn(
-    scriptSig = CScript() << nHeight << snapshotHash << OP_0;
+    scriptSig = CScript() << CScriptNum::serialize(nHeight) << snapshotHash << OP_0;
 )
 ```
 The reason to use input instead of output is to not add this hash to the chainstate and making it larger.

@@ -1,7 +1,8 @@
 # ADR-11 Snapshot
+
 ```
-Status: Accepted
-Created: 2018-10-09
+Status:   Accepted
+Created:  2018-10-09
 Accepted: 2018-11-06
 ```
 
@@ -83,6 +84,7 @@ is serialized in the `version` P2P message.
 that it allows us to introduce other TX types in the future without breaking the protocol.
 
 Sample code of computing the snapshot hash:
+
 ```c++
 secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
 secp256k1_multiset multiset;
@@ -96,6 +98,7 @@ uint256 hash;
 secp256k1_multiset_finalize(ctx, in.data(), &multiset);
 return hash;
 ```
+
 Notice: there is no count byte in front of the message.
 
 ### Snapshot generation
@@ -118,11 +121,13 @@ last `5` snapshots. Validators always create snapshots. Proposers can disable sn
 To guarantee that the snapshot is a valid one and other nodes can trust it, we add the snapshot hash to the chain.
 Every proposer must include the snapshot hash inside the CoinBase transaction as part of the script of the first input.
 The schema of the input is the following:
+
 ```
 CTxIn(
     scriptSig = CScript() << CScriptNum::serialize(nHeight) << snapshotHash << OP_0;
 )
 ```
+
 The reason to use input instead of output is to not add this hash to the chainstate and making it larger.
 
 Everyone who receives the block must validate that it has the correct snapshot hash.
@@ -161,6 +166,7 @@ To start the node in ISD mode, it's required to set two parameters:
 
 1. `-prune=n` (n >= 1)
 2. `-isd=1`
+
 If pruning mode is not enabled, the regular IBD will be used. This ADR proposes to make ISD as an extension to the pruning.
 Later we might revise it and make ISD enabled by default. 
 
@@ -195,11 +201,13 @@ utxoSubsetIndex | uint64 | 8 | index of the first UTXO subset in the snapshot
 utxoSubsetCount | uint16 | 2 | number of UTXO subsets to return
 
 During the initial request:
+
 * _bestBlockHash_ must be empty
 * _utxoSubsetIndex_ set to 0
 * _utxoSubsetCount_ any number larger than 0
 
 After the first chunk of data is received, message should have the following values:
+
 * _bestBlockHash_ is set according to the response in _snapshot_ message
 * _utxoSubsetIndex_ is the next starting index to request. `utxoSubsetIndex = snapshot.utxoSubsetIndex + snapshot.utxoSubsetCount`
 * _utxoSubsetCount_ any number larger than 0

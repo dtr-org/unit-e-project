@@ -1,12 +1,17 @@
 # ADR-1: Adopt ADR
+
 ```
-Status: Accepted
-Created: 2018-08-16
+Status:   Accepted
+Created:  2018-08-16
 Accepted: 2018-08-17
 ```
+
 ## Context
+
 It is very important to keep track of which decisions were taken, when and foremost why.  
+
 ## Decision
+
 In order to help document decision processes we adopt the [ADR (Architecture Decision Record)](https://github.com/joelparkerhenderson/architecture_decision_record).
 
 Characteristics of a good ADR:  
@@ -15,8 +20,10 @@ Characteristics of a good ADR:
 - Immutable record - The decisions made in a previously published ADR should not be altered
 - Specificity - Each ADR should be about a single AD
 
-#### Document format
+### Document format
+
 Every ADR document MUST follow format:
+
 ```
 # Title
 A concise title of the ADR, imperative and short, like a git commit message.  
@@ -52,4 +59,5 @@ The pull request is then the place to comment before making the ADR final.
 We MUST adopt [RFC2119](https://www.ietf.org/rfc/rfc2119.txt) when indicating requirements inside the document.
 
 ## Consequences
+
 Adopting this system will require extra effort to maintain the various proposals and update their status but this should be quickly outperformed by the benefits coming from being able to recollect exactly why certain decisions where made and avoid useless reiteration and exploration over decision paths already analysed in the past.

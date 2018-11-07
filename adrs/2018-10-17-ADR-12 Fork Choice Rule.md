@@ -1,8 +1,8 @@
 # ADR-12 Fork choice rule
 
 ```
-Status: Accepted
-Created: 2018-10-17
+Status:   Accepted
+Created:  2018-10-17
 Accepted: 2018-10-25
 ```
 

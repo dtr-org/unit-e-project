@@ -1,9 +1,11 @@
 # ADR-18 unit-e Transaction Types
 
 ```
-Status:   Approved
+Status:  Accepted
+Created: 2018-11-02
+
 Changelog:
-- 2018-11-05 created, covering Payment, Coinstake and Admin types
+- 2018-11-02 created, covering Payment, Coinstake and Admin types
 - 2018-11-06 accepted, covering Deposit, Vote, Logout, Slash, and Withdraw
 ```
 

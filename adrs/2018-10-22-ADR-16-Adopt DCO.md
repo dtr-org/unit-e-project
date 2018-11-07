@@ -1,8 +1,9 @@
 # ADR-16: Adopt DCO
 
 ```
-Status: Proposal
-Created: 2018-10-22
+Status:   Accepted
+Created:  2018-10-22
+Accepted: 2018-11-06
 ```
 
 ## Context

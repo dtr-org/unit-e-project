@@ -25,24 +25,25 @@ Decisions have to be taken. Generally, decision making should happen on the most
 
 ### Governance elements
 
-* Project vision (keep it simple)
-* Code of Conduct (Examples: [KDE Code of Conduct](https://www.kde.org/code-of-conduct/), [Contributor Covenant](https://www.contributor-covenant.org/))
-* Maintainers (define and document who maintainers are and how they are selected, how is access to the git repo managed, who has access, how to get access, put it in a MAINTAINERS.md file)
+* Project vision (keep it simple, will be on the DTR and Unit-e web sites)
+* [Code of Conduct](https://github.com/dtr-org/unit-e/blob/master/CODE_OF_CONDUCT.md) (Other examples: [KDE Code of
+  Conduct](https://www.kde.org/code-of-conduct/), [Contributor
+  Covenant](https://www.contributor-covenant.org/))
+* Maintainers (define and document who maintainers are and how they are selected, how is access to the git repo managed, who has access, how to get access, put it in a [MAINTAINERS.md](https://github.com/dtr-org/unit-e/blob/master/MAINTAINERS.md) file)
 * License policy
-  * MIT for code
+  * MIT for code by default
     * License file ([COPYING](https://github.com/dtr-org/unit-e/blob/master/COPYING))
     * License headers in each file
-  * CC-BY-SA for text and documentation specific to the UnitE project
-  * CC-0 for data and text to be used by others
+    * Script to manage copyright notices in license headers
+      ([`copyright_header.py`](https://github.com/dtr-org/unit-e/blob/master/contrib/devtools/copyright_header.py))
+    * Includes documentation
+  * GPLv2 for [`unit-e-desktop`](https://github.com/dtr-org/unit-e-desktop)
+    adopting the license of the original code base, don't move code from
+    unit-e-desktop to unit-e to not compromise the MIT licensing
+  * CC-0 for text of ADRs because ideas should be free, code under MIT to avoid
+    issues with incorporating code from ADRs into the unit-e code base
 * No contributor agreement, i.e. inbound=outbound (That means only the license governs what can be done with the code, contributors contribute under the same license (inbound) as the project releases the project (outbound). There is nothing like a company releasing a "commercial" version under a proprietary license.)
-* Use [DCO](https://developercertificate.org/)?
-
-### Actions
-
-* [Document maintainers](https://github.com/dtr-org/unit-e-docs/issues/17)
-* [Create UnitE Code of Conduct](https://github.com/dtr-org/unit-e-docs/issues/18)
-* [Decide if to use DCO](https://github.com/dtr-org/unit-e-docs/issues/19)
-* [Document license policy](https://github.com/dtr-org/unit-e-docs/issues/20)
+* Use [DCO](https://developercertificate.org/) (see [instructions](https://github.com/dtr-org/unit-e/blob/master/CONTRIBUTING.md#sign-your-work))
 
 
 ## Development

@@ -1,6 +1,6 @@
-# Asynchronous message interface in Bitcoin client
+# Synchronous message interface in Bitcoin client
 
-Bitcoin internally uses an asynchronous message delivery system. It is mainly
+Bitcoin internally uses a synchronous message delivery system. It is mainly
 used to decouple the wallet (wallet.a) functionalities from the validation (included in
  server.a).
 

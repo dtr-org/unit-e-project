@@ -34,8 +34,8 @@ class HADRon:
                 for i in range(1, 10):
                     next_line = file.readline()
 
-                    if not title and re.match("^# ADR-[0-9]*:.*$", next_line):
-                        title = re.search("^# ADR-[0-9]*:(.*)$", next_line).group(1).strip()
+                    if not title and re.match("^# ADR-[0-9]*[: ].*$", next_line):
+                        title = re.search("^# ADR-[0-9]*[: ](.*)$", next_line).group(1).strip()
 
                     if not status and re.match("^Status:.*$", next_line):
                         status = re.search("^Status:(.*)$", next_line).group(1).strip()
@@ -70,4 +70,5 @@ class HADRon:
 
 
 if __name__ == '__main__':
+    os.chdir(os.path.dirname(__file__))
     HADRon().generate()

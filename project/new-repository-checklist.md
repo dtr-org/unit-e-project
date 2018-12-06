@@ -29,6 +29,8 @@ them off there.
     from unit-e and adapt
 * Repository settings (needs admin access)
   * [ ] Disable merging and rebasing pull request on merge
+  * [ ]  Set up `master` as protected branch which requires review on pull
+    requests and requires status checks to pass, including administrators
   * [ ] Enable [Mergeable app](https://github.com/apps/mergeable) (add
     [configuration](https://github.com/dtr-org/unit-e/blob/master/.github/mergeable.yml))
   * [ ] Enable [DCO app](https://github.com/apps/dco)

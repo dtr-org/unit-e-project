@@ -14,3 +14,4 @@
 |[ADR-0017](https://github.com/dtr-org/unit-e-docs/blob/master/adrs/ADR-0017.md)|No Nonce or Extra Nonce|Accepted|2018-11-05|2018-11-03|
 |[ADR-0018](https://github.com/dtr-org/unit-e-docs/blob/master/adrs/ADR-0018.md)|unit-e Transaction Types|Accepted|2018-11-02|2018-11-06|
 |[ADR-0021](https://github.com/dtr-org/unit-e-docs/blob/master/adrs/ADR-0021.md)|Transfer Esperanza Transactions|Draft|2018-11-08||
+|[ADR-0023](https://github.com/dtr-org/unit-e-docs/blob/master/adrs/ADR-0023.md)|Unit-e improvement proposals (UIP)|Accepted|2018-11-29|2018-12-06|

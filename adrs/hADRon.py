@@ -14,9 +14,24 @@ class HADRon:
     def __init__(self):
         pass
 
-    def generate(self):
 
+    def generate(self):
         toc_filename = "README.md"
+        lines =[]
+        with open(toc_filename, "r") as toc_file:
+            found_table = False
+            for line in toc_file:
+                if line.startswith('|'):
+                    if not found_table:
+                        lines += self.generate_table()
+                        found_table = True
+                else:
+                    lines.append(line.rstrip())
+        with open(toc_filename, "w") as toc_file:
+            for l in lines:
+                toc_file.write(l + "\n")
+
+    def generate_table(self):
         header = "| ADR | Title | Status | Created | Accepted |"
         sub_h = "|---|---|:---:|:---:|:---:|"
 
@@ -54,10 +69,8 @@ class HADRon:
             new_entry = "|" + num + "|" + title + "|" + status + "|" + created + "|" + accepted + "|"
             lines.append(new_entry)
 
-        with open(toc_filename, "w") as toc_file:
-            for l in lines:
-                toc_file.write(l + "\n")
-            toc_file.close()
+        return lines
+
 
     def list_adrs(self):
         adrs = []

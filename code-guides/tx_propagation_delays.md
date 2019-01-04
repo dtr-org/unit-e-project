@@ -65,18 +65,24 @@ Timeout | Prob(Poisson(5) > Timeout) | Prob(Poisson(2) > Timeout)
 Please note that those computations are only valid for a single connection. In a real world each node would have lots of
 connections with lots of alternative routes between nodes, so overall propagation time will be different.
 
+# Whitelisting
+
+It is possible to completely disable diffusion for a selected node. Just add
+it to the white list. In functional tests that can be achieved with
+`-whitelist=127.0.0.1` extra argument.
+
 ## Simulations
 
 To expand results on a slightly more complicated network topologies several simulations were run.
 We start timer when node 0 sends a transaction. We stop timer when node 1 has this transaction in its mempool.
 Below are recorded values for several small networks:
 
-  &nbsp;| 0<->1 | 0->1 | 0<-1 | 0<->2<->1 | 0<->2<->1; 0<->3<->1
---------|-------|------|------|-----------|------------
-Average | 1.7   | 2.25 | 5    | 3.15      | 2.29
-Min     | 0.48  | 1.46 | 0.47 | 0.49      | 0.56
-Max     | 11.8  | 20.86| 40.1 | 14.25     | 8.59
-Samples | 1000  | 1000 | 1000 | 501       | 3625
+  &nbsp;| 0<->1 | 0->1 | 0<-1 | 0<->2<->1 | 0<->2<->1; 0<->3<->1 | 0<-1 + whitelist
+--------|-------|------|------|-----------|-------------|-----------------
+Average | 1.7   | 2.25 | 5    | 3.15      | 2.29        | 0.76
+Min     | 0.48  | 1.46 | 0.47 | 0.49      | 0.56        | 0.59
+Max     | 11.8  | 20.86| 40.1 | 14.25     | 8.59        | 1.03
+Samples | 1000  | 1000 | 1000 | 501       | 3625        | 1000
 
 Note: `0<->1` denotes bidirectional connection. Which is in fact two connections: inbound `0<-1` and outbound `0->1`.
 
@@ -93,6 +99,7 @@ alternative routes exist in the network. However be careful: maximum propagation
 alternative routes grows. It is the probability of getting it decreases.
 
 ## Recommendations to avoid flakiness in functional tests
+- Use whitelisting to completely disable diffusion
 - Prefer bidirectional connections
 - Prefer fully-connected network topologies
 - Avoid using `sleep` to wait for the transaction effects. You can use one of the special functions with timeouts instead:
@@ -101,4 +108,3 @@ alternative routes grows. It is the probability of getting it decreases.
   - `sync_blocks` - waits until all of the passed nodes have the same tip
   - `sync_all` - is a combination of `sync_mempools` and `sync_blocks`
   - `wait_until` - waits until a passed predicate is true
-- Set relatively big timeouts in the above functions (one minute for example). This won't affect the average test running time, but will save the day when the random generator decides to throw some big values.

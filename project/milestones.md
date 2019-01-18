@@ -25,6 +25,30 @@ Pull requests don't necessarily have to be assigned to a milestone. They usually
 are short-lived and the branch to which they are supposed to be merged already
 indicates to which release they are going.
 
+## Release milestones
+
+The GitHub milestones for representing releases use the following versioning
+scheme:
+
+A version number consists of three numbers in the form `x.y.z` where `x` is the
+major version number, `y` is the minor version number, and `z` is the patch
+level. The version number always has all three components, also if some of them
+are `0`, for example `1.0.0`.
+
+The name of the milestone is the version number without any prefixes or
+suffixes.
+
+Pre-testnet milestones use the version number `0.0.x`, where `x` is incremented
+with every release during the pre-testnet phase.
+
+The first testnet milestone has the version number `0.1.0`. Subsequent
+releases increase the minor version number or patch release corresponding to the
+release.
+
+The first mainnet milestone has the version number `1.0.0`. Subsequent
+releases increment the version number corresponding to the release. The major
+version number is incremented with each 6 month release cycle.
+
 ## "Future" milestone
 
 There is a special milestone "Future" which is used to indicate that the issue

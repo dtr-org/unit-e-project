@@ -102,6 +102,14 @@ if (nSigOps * WITNESS_SCALE_FACTOR > MAX_BLOCK_SIGOPS_COST)
 
 ### `bad-diffbits` / incorrect proof of work
 
+This checks the Proof-of-Work requirement in the context of the current
+and the previous block, and whether the difficulty was correctly accounted
+for. While unit-e has a similar difficulty adjustment, it does not have
+Proof-of-Work and so this particular check was removed from the codebase.
+
+The pull request which removed it is [#612](https://github.com/dtr-org/unit-e/pull/612),
+the commit on master is [1aecc28b](https://github.com/dtr-org/unit-e/commit/1aecc28bf37bfa3a3651cc5645d14a503f7080b0).
+
 [validation.cpp:3132](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3132)
 
 ```C++

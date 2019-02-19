@@ -26,7 +26,9 @@ static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state,
 
 ### `bad-txnmrklroot` / hashMerkleRoot mismatch
 
-[validation.cpp:3007](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3007)
+- bitcoin 0.16: [validation.cpp:3007](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3007)
+- particl 0.16: [validation.cpp:4035](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4035)
+- unit-e: [block_validator.cpp:202](https://github.com/dtr-org/unit-e/blob/45e4f66943d1399ece07c555a2e2c86b61b8fbc6/src/staking/block_validator.cpp#L202)
 
 ```C++
 bool mutated;
@@ -37,9 +39,18 @@ if (block.hashMerkleRoot != hashMerkleRoot2)
 
 ### `bad-txns-duplicate` / duplicate transaction
 
-[BIP98: Fast Merkle Trees](https://github.com/bitcoin/bips/blob/master/bip-0098.mediawiki)
+- bitcoin 0.16: [validation.cpp:3013](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3013)
+- particl 0.16: [validation.cpp:4041](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4041)
+- unit-e: [block_validator.cpp:194](https://github.com/dtr-org/unit-e/blob/45e4f66943d1399ece07c555a2e2c86b61b8fbc6/src/staking/block_validator.cpp#L194)
 
-[validation.cpp:3013](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3013)
+This check checks that there are no duplicate transactions, which is a way of
+corrupting a block without validation noticing. This was actually the reason
+for [CVE-2012-2459](http://cve.mitre.org/cgi-bin/cvename.cgi?name=2012-2459).
+
+There is a way to not have this happen in the first place, by changing the
+structure of the merkle tree:
+[BIP 98](https://github.com/bitcoin/bips/blob/master/bip-0098.mediawiki)
+describes how.
 
 ```C++
 // Check for merkle tree malleability (CVE-2012-2459): repeating sequences
@@ -51,7 +62,8 @@ if (mutated)
 
 ### `bad-blk-length` / size limits failed
 
-[validation.cpp:3024](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3024)
+- bitcoin 0.16: [validation.cpp:3024](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3024)
+- particl 0.16: [validation.cpp:4025](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4052)
 
 ```C++
 if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
@@ -120,7 +132,12 @@ if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
 
 ### `bad-fork-prior-to-checkpoint` / `fCheckpointsEnabled`
 
-[validation.cpp:3141](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3141)
+For shortcutting verification of whe whole blockchain and introducing a kind of
+finalization, bitcoin uses checkpoints (which can be disabled at user's will).
+Since unit-e has finalization, there are no hard-coded checkpoints in unit-e and
+this check is consequently no longer present.
+
+- bitcoin 0.16 [validation.cpp:3141](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3141)
 
 ```C++
 if (fCheckpointsEnabled) {
@@ -135,7 +152,8 @@ if (fCheckpointsEnabled) {
 
 ### `time-too-old` / block's timestamp is too early
 
-[validation.cpp:3146](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3146)
+- bitcoin 0.16 [validation.cpp:3146](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3146)
+- particl 0.16 [validation.cpp:4288](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4288)
 
 ```C++
 if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
@@ -144,7 +162,8 @@ if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
 
 ### `time-too-new` / block timestamp too far in the future
 
-[validation.cpp:3150](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3150)
+- bitcoin 0.16 [validation.cpp:3150](https://github.com/bitcoin/bitcoin/blob/0.16/src/validation.cpp#L3150)
+- particl 0.16 [validation.cpp:4293](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4293)
 
 ```C++
 if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
@@ -495,3 +514,395 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     return true;
 }
 ```
+
+# [particl 0.16](https://github.com/particl/particl-core/tree/0.16)
+
+## `ConnectBlock`
+
+### `bad-proof-of-stake` / check proof of stake failed
+
+[validation.cpp:2330](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L2330)
+
+```C++
+if (block.IsProofOfStake())
+    {
+        pindex->bnStakeModifier = ComputeStakeModifierV2(pindex->pprev, pindex->prevoutStake.hash);
+        setDirtyBlockIndex.insert(pindex);
+
+        uint256 hashProof, targetProofOfStake;
+        if (!CheckProofOfStake(pindex->pprev, *block.vtx[0], block.nTime, block.nBits, hashProof, targetProofOfStake))
+            return state.DoS(100, error("%s: Check proof of stake failed.", __func__), REJECT_INVALID, "bad-proof-of-stake");
+    };
+```
+
+### `bad-cs-amount` / coinstake pays too much
+
+[validation.cpp:2715](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L2715)
+
+```C++
+if (nStakeReward < 0 || nStakeReward > nCalculatedStakeReward)
+    return state.DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward), REJECT_INVALID, "bad-cs-amount");
+```
+
+### `bad-cs-amount` / bad coinstake split amount
+
+[validation.cpp:2723](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L2723)
+
+```C++
+CAmount nMinDevPart = (nCalculatedStakeReward * pDevFundSettings->nMinDevStakePercent) / 100;
+CAmount nMaxHolderPart = nCalculatedStakeReward - nMinDevPart;
+if (nMinDevPart < 0 || nMaxHolderPart < 0)
+    return state.DoS(100, error("%s: bad coinstake split amount (foundation=%d vs reward=%d)", __func__, nMinDevPart, nMaxHolderPart), REJECT_INVALID, "bad-cs-amount");
+```
+
+### `bad-cs-amount` / failed to get previous coinstake
+
+[validation.cpp:2731](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L2731)
+
+```C++
+CTransactionRef txPrevCoinstake;
+if (!coinStakeCache.GetCoinStake(pindex->pprev->GetBlockHash(), txPrevCoinstake))
+    return state.DoS(100, error("%s: Failed to get previous coinstake.", __func__), REJECT_INVALID, "bad-cs-amount");
+```
+
+### Foundation funds / developer funds checks
+
+```C++
+if (pindex->nHeight % pDevFundSettings->nDevOutputPeriod == 0)
+{
+    // Fund output must exist and match cfwd, cfwd data output must be unset
+    // nStakeReward must == nDevBfwd + nCalculatedStakeReward
+
+    if (nStakeReward != nDevBfwd + nCalculatedStakeReward)
+        return state.DoS(100, error("%s: bad stake-reward (actual=%d vs expected=%d)", __func__, nStakeReward, nDevBfwd + nCalculatedStakeReward), REJECT_INVALID, "bad-cs-amount");
+
+    CTxDestination dfDest = CBitcoinAddress(pDevFundSettings->sDevFundAddresses).Get();
+    if (dfDest.type() == typeid(CNoDestination))
+        return error("%s: Failed to get foundation fund destination: %s.", __func__, pDevFundSettings->sDevFundAddresses);
+    CScript devFundScriptPubKey = GetScriptForDestination(dfDest);
+
+    // output 1 must be to the dev fund
+    const CTxOutStandard *outputDF = txCoinstake->vpout[1]->GetStandardOutput();
+    if (!outputDF)
+        return state.DoS(100, error("%s: Bad foundation fund output.", __func__), REJECT_INVALID, "bad-cs");
+
+    if (outputDF->scriptPubKey != devFundScriptPubKey)
+        return state.DoS(100, error("%s: Bad foundation fund output script.", __func__), REJECT_INVALID, "bad-cs");
+
+    if (outputDF->nValue < nDevBfwd + nMinDevPart) // max value is clamped already
+        return state.DoS(100, error("%s: Bad foundation-reward (actual=%d vs minfundpart=%d)", __func__, nStakeReward, nDevBfwd + nMinDevPart), REJECT_INVALID, "bad-cs-fund-amount");
+
+
+    if (txCoinstake->GetDevFundCfwd(nDevCfwdCheck))
+        return state.DoS(100, error("%s: Coinstake foundation cfwd must be unset.", __func__), REJECT_INVALID, "bad-cs-cfwd");
+}
+```
+
+### `bad-cs-amount` / bad stake reward
+
+[validation.cpp:2772](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L2772)
+
+```C++
+if (nStakeReward < 0 || nStakeReward > nMaxHolderPart)
+    return state.DoS(100, error("%s: Bad stake-reward (actual=%d vs maxholderpart=%d)", __func__, nStakeReward, nMaxHolderPart), REJECT_INVALID, "bad-cs-amount");
+```
+
+### `bad-cs` / block that isn't coinstake or genesis
+
+[validation.cpp:2784](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L2784)
+
+```C++
+if (block.GetHash() != Params().GenesisBlock().GetHash())
+    return state.DoS(100, error("ConnectBlock() : Found block that isn't coinstake or genesis."), REJECT_INVALID, "bad-cs");
+```
+
+### `bad-cs-cfwd` / foundation fund carried forward mismatch
+
+[validation.cpp:2777](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L2777)
+
+```C++
+CAmount nDevCfwd = nDevBfwd + nCalculatedStakeReward - nStakeReward;
+if (!txCoinstake->GetDevFundCfwd(nDevCfwdCheck)
+    || nDevCfwdCheck != nDevCfwd)
+    return state.DoS(100, error("%s: Coinstake foundation fund carried forward mismatch (actual=%d vs expected=%d)", __func__, nDevCfwdCheck, nDevCfwd), REJECT_INVALID, "bad-cs-cfwd");
+```
+
+
+## `CheckBlockHeader`
+
+### `block-version` / bad block version
+
+[validation.cpp:3923](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L3923)
+
+```C++
+if (fParticlMode
+    && !block.IsParticlVersion())
+return state.DoS(100, false, REJECT_INVALID, "block-version", false, "bad block version");
+
+```
+
+### `block-timestamp` / block timestamp too far in the future
+
+[validation.cpp:3929](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L3929)
+
+```C++
+// Check timestamp
+if (fParticlMode
+    && !block.hashPrevBlock.IsNull() // allow genesis block to be created in the future
+    && block.GetBlockTime() > FutureDrift(GetAdjustedTime()))
+return state.DoS(50, false, REJECT_INVALID, "block-timestamp", false, "block timestamp too far in the future");
+```
+
+where [`FutureDrift`](https://github.com/particl/particl-core/blob/0.16/src/validation.h#L160) is defined as:
+
+```C++
+inline int64_t FutureDrift(int64_t nTime) { return nTime + 15; } // FutureDriftV2
+```
+
+This is one of two call sites to `FutureDrift`.
+
+### `high-hash` / proof of work failed
+
+[validation.cpp:3934](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L3934)
+
+```C++
+// Check proof of work matches claimed amount
+if (!fParticlMode
+    && fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+```
+
+## `CheckBlock`
+
+### `bad-cs-duplicate` / Duplicate stake check
+
+particl performs a check for whether a piece of stake is unique / has been seen to be used before.
+particl flags such blocks (it used to reject, but that code is commented out). Nodes that send blocks
+with duplicate stake are [penalized with a ban score of 10](https://github.com/particl/particl-core/blob/0.16/src/net_processing.cpp#L962).
+
+- particl 0.16 [validation.cpp:4056](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4056)
+- particl 0.17 [validation.cpp:4052](https://github.com/particl/particl-core/blob/0.17/src/validation.cpp#L4052)
+- particl 0.18 [validation.cpp:4064](https://github.com/particl/particl-core/blob/0.18/src/validation.cpp#L4064)
+
+```C++
+if (!IsInitialBlockDownload()
+            && block.vtx[0]->IsCoinStake()
+            && !CheckStakeUnique(block))
+        {
+            //state.DoS(10, false, REJECT_INVALID, "bad-cs-duplicate", false, "duplicate coinstake");
+
+            state.nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
+
+            /*
+            // TODO: ask peers which stake kernel they have
+            if (chainActive.Tip()->nHeight < GetNumBlocksOfPeers() - 8) // peers have significantly longer chain, this node must've got the wrong stake 1st
+            {
+                LogPrint(BCLog::POS, "%s: Ignoring CheckStakeUnique for block %s, chain height behind peers.\n", __func__, block.GetHash().ToString());
+                const COutPoint &kernel = block.vtx[0]->vin[0].prevout;
+                mapStakeSeen[kernel] = block.GetHash();
+            } else
+                return state.DoS(20, false, REJECT_INVALID, "bad-cs-duplicate", false, "duplicate coinstake");
+            */
+        };
+```
+
+### `bad-cb-missing` / first tx is not coinbase
+
+Same check as in bitcoin, just it is augmented to take into consideration coinstake
+transactions as particl makes a distinction of `IsCoinBase` and `IsCoinStake`. Unit-e
+does not distinguish these, there is only coinbase (which is particls coinstake). The
+reason particl distinguishes these is that they accept bitcoin PoW blocks (the genesis
+block is such a block) and particl PoS blocks (having a coinstake transaction).
+
+- particl 0.16 [validation.cpp:4079](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4079)
+
+```C++
+// First transaction must be coinbase (genesis only) or coinstake
+// 2nd txn may be coinbase in early blocks: check further in ContextualCheckBlock
+if (!(block.vtx[0]->IsCoinBase() || block.vtx[0]->IsCoinStake())) // only genesis can be coinbase, check in ContextualCheckBlock
+    return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
+
+```
+
+### `bad-cb-multiple` / 
+
+Same check as in bitcoin, just it is augmented to take into consideration coinstake
+transactions as particl makes a distinction of `IsCoinBase` and `IsCoinStake`. Unit-e
+does not distinguish these, there is only coinbase (which is particls coinstake). The
+reason particl distinguishes these is that they accept bitcoin PoW blocks (the genesis
+block is such a block) and particl PoS blocks (having a coinstake transaction).
+
+- particl 0.16 [validation.cpp:4084](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4084)
+
+```C++
+// 2nd txn may never be coinstake, remaining txns must not be coinbase/stake
+for (size_t i = 1; i < block.vtx.size(); i++)
+    if ((i > 1 && block.vtx[i]->IsCoinBase()) || block.vtx[i]->IsCoinStake())
+        return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase or coinstake");
+```
+
+### `bad-block-signature` / bad block signature
+
+- particl 0.16 [validation.cpp:4087](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4087)
+- unit-e [block_validator.cpp:212](https://github.com/dtr-org/unit-e/blob/45e4f66943d1399ece07c555a2e2c86b61b8fbc6/src/staking/block_validator.cpp#L212)
+
+```C++
+if (!CheckBlockSignature(block))
+    return state.DoS(100, false, REJECT_INVALID, "bad-block-signature", false, "bad block signature");
+```
+
+
+## `ContextualCheckBlockHeader`
+
+### `bad-proof-of-stake`
+
+This is particl's counterpart to bitcoins `bad-diffbits` and has to do with difficulty calculation.
+bitcoin uses `GetNextWorkRequired` (`pow.cpp`) whereas particl uses `GetNextTargetRequired` (`validation.cpp`)
+which is a PoS function.
+
+- particl 0.16 [validation.cpp:4268](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4268)
+
+```C++
+// Check proof-of-stake
+if (block.nBits != GetNextTargetRequired(pindexPrev))
+            return state.DoS(100, false, REJECT_INVALID, "bad-proof-of-stake", true, strprintf("%s: Bad proof-of-stake target", __func__));
+```
+
+
+## `ContextualCheckBlock`
+
+### `bad-cs-outputs` / Too many outputs in coinstake
+
+- particl 0.16 [validation.cpp:4351](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4351)
+
+```C++
+// Limit the number of outputs in a coinstake txn to 6: 1 data + 1 foundation + 4 user
+if (nPrevTime >= consensusParams.OpIsCoinstakeTime)
+{
+    if (block.vtx[0]->vpout.size() > 6)
+        return state.DoS(100, false, REJECT_INVALID, "bad-cs-outputs", false, "Too many outputs in coinstake");
+};
+```
+
+### `bad-cs-malformed` / coinstake txn is malformed
+
+This is particl's version of BIP34. They put the "coinbase committment" as it is called
+in bitcoin in a special output which contains the height of the block. This output is a
+data output as particl has a system of different kinds of outputs, one of them being an
+explicit "data" output.
+
+- particl 0.16 [validation.cpp:4357](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4357)
+- unit-e [block_validator.cpp:83](https://github.com/dtr-org/unit-e/blob/45e4f66943d1399ece07c555a2e2c86b61b8fbc6/src/staking/block_validator.cpp#L83)
+
+```C++
+// coinstake output 0 must be data output of blockheight
+int i;
+if (!block.vtx[0]->GetCoinStakeHeight(i))
+    return state.DoS(100, false, REJECT_INVALID, "bad-cs-malformed", false, "coinstake txn is malformed");
+```
+
+### `bad-cs-height` / block height mismatch in coinstake
+
+- particl 0.16 [validation.cpp:4357](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4357)
+
+```C++
+if (i != nHeight)
+    return state.DoS(100, false, REJECT_INVALID, "bad-cs-height", false, "block height mismatch in coinstake");
+```
+
+### `bad-witness-merkle-match` / witness merkle commitment mismatch
+
+- particl 0.16 [validation.cpp:4377](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4377)
+
+```C++
+// check witness merkleroot, TODO: should witnessmerkleroot be hashed?
+bool malleated = false;
+uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated);
+
+if (hashWitness != block.hashWitnessMerkleRoot)
+    return state.DoS(100, false, REJECT_INVALID, "bad-witness-merkle-match", true, strprintf("%s : witness merkle commitment mismatch", __func__));
+```
+
+### `bad-coinstake-time` / coinstake timestamp violation
+
+- particl 0.16 [validation.cpp:4380](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4380)
+
+```C++
+if (!CheckCoinStakeTimestamp(nHeight, block.GetBlockTime()))
+    return state.DoS(50, false, REJECT_INVALID, "bad-coinstake-time", true, strprintf("%s: coinstake timestamp violation nTimeBlock=%d", __func__, block.GetBlockTime()));
+```
+
+### `bad-block-time` / block's timestamp is too early
+
+- particl 0.16 [validation.cpp:4384](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4384)
+
+```C++
+// Check timestamp against prev
+if (block.GetBlockTime() <= pindexPrev->GetPastTimeLimit() || FutureDrift(block.GetBlockTime()) < pindexPrev->GetBlockTime())
+    return state.DoS(50, false, REJECT_INVALID, "bad-block-time", true, strprintf("%s: block's timestamp is too early", __func__));
+```
+
+where [`FutureDrift`](https://github.com/particl/particl-core/blob/0.16/src/validation.h#L160) is defined as:
+
+```C++
+inline int64_t FutureDrift(int64_t nTime) { return nTime + 15; } // FutureDriftV2
+```
+
+This is one of two call sites to `FutureDrift`.
+
+### `bad-proof-of-stake` / CheckProofOfStake failed
+
+- particl 0.16 [validation.cpp:4399](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4399)
+
+```C++
+// Blocks are connected at end of import / reindex
+// CheckProofOfStake is run again during connectblock
+if (!IsInitialBlockDownload() // checks (!fImporting && !fReindex)
+    && !CheckProofOfStake(pindexPrev, *block.vtx[0], block.nTime, block.nBits, hashProof, targetProofOfStake))
+{
+    LogPrintf("WARNING: ContextualCheckBlock(): check proof-of-stake failed for block %s\n", block.GetHash().ToString());
+    //return false; // do not error here as we expect this during initial block download
+    if (pindexPrev->bnStakeModifier.IsNull())
+        // Can happen if the block is received out of order - CheckProofOfStake will run again on connectblock.
+        LogPrint(BCLog::POS, "%s: Accepting failed CheckProofOfStake block, missing stake-modifier.\n", __func__);
+    else
+        return state.DoS(50, false, REJECT_INVALID, "bad-proof-of-stake", true, strprintf("%s: CheckProofOfStake failed.", __func__));
+};
+```
+
+### `bad-cs-missing` / first tx is not coinstake
+
+- particl 0.16 [validation.cpp:4419](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4419)
+
+```C++
+if (nHeight > 0 && !block.vtx[0]->IsCoinStake()) // only genesis block can start with coinbase
+    return state.DoS(100, false, REJECT_INVALID, "bad-cs-missing", false, "first tx is not coinstake");
+```
+
+### `bad-cb` / "genesis chain" check
+
+particl does not just have a genesis block, but also an initial import of 70 blocks
+which dispersed the funds in the beginning. unit-e does not have such a thing.
+
+- particl 0.16 [validation.cpp:4421](https://github.com/particl/particl-core/blob/0.16/src/validation.cpp#L4421)
+
+```C++
+if (nHeight > 0 // skip genesis
+    && Params().GetLastImportHeight() >= (uint32_t)nHeight)
+{
+    // 2nd txn must be coinbase
+    if (block.vtx.size() < 2 || !block.vtx[1]->IsCoinBase())
+        return state.DoS(100, false, REJECT_INVALID, "bad-cb", false, "Second txn of import block must be coinbase");
+
+    // Check hash of genesis import txn matches expected hash.
+    uint256 txnHash = block.vtx[1]->GetHash();
+    if (!Params().CheckImportCoinbase(nHeight, txnHash))
+        return state.DoS(100, false, REJECT_INVALID, "bad-cb", false, "Incorrect outputs hash.");
+} else
+{
+    // 2nd txn can't be coinbase if block height > GetLastImportHeight
+    if (block.vtx.size() > 1 && block.vtx[1]->IsCoinBase())
+        return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "unexpected coinbase");
+};
+```
+

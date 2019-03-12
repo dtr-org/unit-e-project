@@ -179,7 +179,7 @@ When receiving a deposit transaction a node should in addition to the regular tr
 ```
 {
   "deposit" : output_value,
-  "start_dynasty": cur_dynasty + 2,
+  "start_dynasty": cur_dynasty + 3,
   "end_dynasty": infinity,
   "is_slashed": false,
   "total_deposit_at_logout": 0,
@@ -189,7 +189,8 @@ When receiving a deposit transaction a node should in addition to the regular tr
 * save the validator withdrawal address for future reference.
 * update the current dynasty total deposit.
 
-The `"start_dynasty": cur_dynasty + 2` should give enough time to the deposit to be included in a block and broadcasted to all the nodes.
+The `"start_dynasty": cur_dynasty + 3` should give enough time to the deposit to be included in a block and broadcasted to all the nodes.
+See more details in [dtr-org/unit-e#743](https://github.com/dtr-org/unit-e/pull/743)
 
 ## 2. Vote transactions
 

@@ -5,6 +5,7 @@ tied to one specific repository.
 
 * [Open Source Strategy](open-source-strategy.md)
 * [How we do documentation](documentation.md)
+* [Project naming conventions](naming-conventions.md)
 * [Conventions for GitHub issues](issues.md)
 * [Conventions for GitHub milestones](milestones.md)
 * [Checklist for creating new repositories](new-repository-checklist.md)

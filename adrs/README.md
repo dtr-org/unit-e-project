@@ -13,6 +13,8 @@ unit-e development. For design documents on the protocol or API level see the
 |[ADR-0016](https://github.com/dtr-org/unit-e-docs/blob/master/adrs/ADR-0016.md)|Adopt DCO|Accepted|2018-10-22|2018-11-06|
 |[ADR-0023](https://github.com/dtr-org/unit-e-docs/blob/master/adrs/ADR-0023.md)|Unit-e improvement proposals (UIP)|Accepted|2018-11-29|2018-12-06|
 |[ADR-0024](https://github.com/dtr-org/unit-e-docs/blob/master/adrs/ADR-0024.md)|Define work flow and labels for issues|Proposal|2018-12-05|2018-12-20|
+|[ADR-0025](https://github.com/dtr-org/unit-e-docs/blob/master/adrs/ADR-0025.md)|Change naming from Validator to Finalizer|Accepted|2019-02-05|2019-02-11|
+|[ADR-0026](https://github.com/dtr-org/unit-e-docs/blob/master/adrs/ADR-0026.md)|Open the repos|Accepted|2019-04-09|2019-04-16|
 
 Some design documents which have started as ADRs have been moved to the UIP
 repository as UIPs under the same number:

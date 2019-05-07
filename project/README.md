@@ -3,6 +3,7 @@ strategy and project management topics as well as project-wide conventions.
 This, in particular, is a place where to put project documentation which is not
 tied to one specific repository.
 
+* [Testnet releases](testnet-releases.md)
 * [Open Source Strategy](open-source-strategy.md)
 * [How we do documentation](documentation.md)
 * [Project naming conventions](naming-conventions.md)

@@ -1,21 +1,21 @@
-*What does it take to make UnitE an awesome open source project? This document outlines a strategy and concrete actions how to get there. It's meant as a starting point which we will refine while going. It's living in the unit-e-docs repo and there are GitHub issues in this repo with further actions and discussions. They are also linked from the corresponding sections of this document.*
+*What does it take to make Unit-e an awesome open source project? This document outlines a strategy and concrete actions how to get there. It's meant as a starting point which we will refine while going. It's living in the [unit-e-project](https://github.com/dtr-org/unit-e-project) repo and there are GitHub issues in this repo with further actions and discussions.*
 
-The focus of this document is the open source software development of UnitE.
+The focus of this document is the open source software development of Unit-e.
 
 ## Goals
 
-* Run UnitE as an open source project according to highest standards
+* Run Unit-e as an open source project according to highest standards
 * Make development transparent to the public
 * Be open for contributions and create a diverse and distributed community of contributors
 * Maintain a welcoming, pragmatic, fun culture focused on getting things done
 * Quality over quantity
 * Build an engaged user community
-* Support DTR foundation in nurturing an ecosystem of projects around UnitE
+* Support DTR foundation in nurturing an ecosystem of projects around Unit-e
 
 
 ## Governance
 
-Purpose and direction of the project need to be clear to everyone. This can be captured in some vision or mission document. There is work in progress to put that on the web sites of the foundation and the project which are being created.
+Purpose and direction of the project need to be clear to everyone. This can be captured in some vision or mission document. We have it on the foundation and project web sites.
 
 Tone and culture of a project are critical to its success in attracting and retaining users and contributors. The most important part is to live the culture by example, be open, be welcoming, be kind. A code of conduct can help to make some part of the culture explicit and have something as guide in case of conflicts.
 
@@ -25,10 +25,8 @@ Decisions have to be taken. Generally, decision making should happen on the most
 
 ### Governance elements
 
-* Project vision (keep it simple, will be on the DTR and Unit-e web sites)
-* [Code of Conduct](https://github.com/dtr-org/unit-e/blob/master/CODE_OF_CONDUCT.md) (Other examples: [KDE Code of
-  Conduct](https://www.kde.org/code-of-conduct/), [Contributor
-  Covenant](https://www.contributor-covenant.org/))
+* Project vision (keep it simple, see [DTR web site](https://dtr.org/unit-e/), [Unit-e web site](https://unit-e.io) and [unit-e README](https://github.com/dtr-org/unit-e/blob/master/README.md))
+* [Code of Conduct](https://github.com/dtr-org/unit-e/blob/master/CODE_OF_CONDUCT.md)
 * Maintainers (define and document who maintainers are and how they are selected, how is access to the git repo managed, who has access, how to get access, put it in a [MAINTAINERS.md](https://github.com/dtr-org/unit-e/blob/master/MAINTAINERS.md) file)
 * License policy
   * MIT for code by default
@@ -37,11 +35,9 @@ Decisions have to be taken. Generally, decision making should happen on the most
     * Script to manage copyright notices in license headers
       ([`copyright_header.py`](https://github.com/dtr-org/unit-e/blob/master/contrib/devtools/copyright_header.py))
     * Includes documentation
-  * GPLv2 for [`unit-e-desktop`](https://github.com/dtr-org/unit-e-desktop)
-    adopting the license of the original code base, don't move code from
-    unit-e-desktop to unit-e to not compromise the MIT licensing
   * CC-0 for text of ADRs because ideas should be free, code under MIT to avoid
     issues with incorporating code from ADRs into the unit-e code base
+  * If there will be components using the GPL, don't move code from them to unit-e to not compromise the MIT licensing
 * No contributor agreement, i.e. inbound=outbound (That means only the license governs what can be done with the code, contributors contribute under the same license (inbound) as the project releases the project (outbound). There is nothing like a company releasing a "commercial" version under a proprietary license.)
 * Use [DCO](https://developercertificate.org/) (see [instructions](https://github.com/dtr-org/unit-e/blob/master/CONTRIBUTING.md#sign-your-work))
 
@@ -54,21 +50,19 @@ Core and starting point for the open source project is the development of the so
 
 Ideally there is one documented development process which works the same for everybody, core contributors as well as external contributors.
 
-A good part of the process is already defined by the current practices and by what is inherited from the Bitcoin development process (see Bitcoin Core's [CONTRIBUTING.md](https://github.com/bitcoin/bitcoin/blob/master/CONTRIBUTING.md)). This might need some adaption where we feel the need to improve on what is there.
+A good part of the process is already defined by the current practices and by what is inherited from the Bitcoin development process (see Bitcoin Core's [CONTRIBUTING.md](https://github.com/bitcoin/bitcoin/blob/master/CONTRIBUTING.md)). We have adapted and documented that in the [unit-e contribution guidelines](https://github.com/dtr-org/unit-e/blob/master/CONTRIBUTING.md).
 
 #### Git repositories
 
-The central place for development is GitHub and the core code repository ([dtr-org/unit-e](https://github.com/dtr-org/unit-e)). It's currently private but will be made public when we are ready to launch.
+The central place for development is GitHub and the core code repository ([dtr-org/unit-e](https://github.com/dtr-org/unit-e)).
 
-The [dtr-org/unit-e-docs](https://github.com/dtr-org/unit-e-docs) repo contains additional documentation which is not directly related to the code of UnitE but is relevant to the project. This includes documentation of architectural decisions, protocol specifications, and processes. The repo will be made public along with the main code repository.
+The [dtr-org/unit-e-project](https://github.com/dtr-org/unit-e-project) repo contains additional documentation which is not directly related to the code of unit-e but is relevant to the project. This includes documentation of architectural decisions, protocol specifications, and processes.
 
-The [dtr-org/clonemachine](https://github.com/dtr-org/clonemachine) repo contains the tooling to prepare a fork of Bitcoin Core which is ready to be merged into the UnitE code base. This repo also will be made public along with the main code repository.
+The [dtr-org/unit-e-clonemachine](https://github.com/dtr-org/unit-e-clonemachine) repo contains the tooling to prepare a fork of Bitcoin Core which is ready to be merged into the unit-e code base.
 
-Work on all these repositories like they would already be public in terms of what you put in there.
+There are a couple of other repositories under the dtr-org organization which belong to the project.
 
-##### Actions
-
-* [Define repository layout for open source project](https://github.com/dtr-org/unit-e-docs/issues/21)
+If you work on private repositories to get something started before it gets published work on them like they would already be public in terms of what you put in there so that they can smoothly be published once they are ready.
 
 #### Contributing guidelines
 
@@ -76,32 +70,17 @@ The [CONTRIBUTING.md](https://github.com/dtr-org/unit-e/blob/master/CONTRIBUTING
 
 The CONTRIBUTING.md file should cover all the following sections of the development process.
 
-##### Actions
-
-* [Refine CONTRIBUTING.md](https://github.com/dtr-org/unit-e-docs/issues/22)
-
 #### Tracking work
 
 Work is tracked in GitHub [issues](https://github.com/dtr-org/unit-e/issues) and [pull requests](https://github.com/dtr-org/unit-e/pulls). Keeping discussions there (or at least referencing them from there) keeps them close to the code and creates transparency.
 
 GitHub [milestones](https://github.com/dtr-org/unit-e/milestones) are used to group and schedule work and [labels](https://github.com/dtr-org/unit-e/labels) to classify issues.
 
-There are templates for issues and pull request which help to make sure that the quality of new ones is high and required information is there. This is especially useful for new and external contributors but can also serve as a reminder and guideline for everybody.
-
-##### Actions
-
-* [Create issue template](https://github.com/dtr-org/unit-e-docs/issues/23)
-* [Create PR template](https://github.com/dtr-org/unit-e-docs/issues/24)
-* [Define issue labels](https://github.com/dtr-org/unit-e-docs/issues/25)
-* [Define milestones](https://github.com/dtr-org/unit-e-docs/issues/26)
+There are templates for [issues](https://github.com/dtr-org/unit-e/tree/master/.github/ISSUE_TEMPLATE) and [pull requests](https://github.com/dtr-org/unit-e/blob/master/.github/PULL_REQUEST_TEMPLATE.md) which help to make sure that the quality of new ones is high and required information is there. This is especially useful for new and external contributors but can also serve as a reminder and guideline for everybody.
 
 #### Architectural decisions
 
-Architectural decisions are taken and documented using the [Architecture Decision Record](https://github.com/dtr-org/unit-e-docs/tree/master/adrs) framework. See [ADR-1](https://github.com/dtr-org/unit-e-docs/blob/master/adrs/2018-08-16-ADR-1%20Adopt%20ADR.md) for more details.
-
-##### Actions
-
-* [Decide on scope and visibility of ADRs](https://github.com/dtr-org/unit-e-docs/issues/27)
+Architectural decisions are taken and documented using the [Architecture Decision Record](https://github.com/dtr-org/unit-e-project/tree/master/adrs) framework. See [ADR-1](https://github.com/dtr-org/unit-e-project/blob/master/adrs/ADR-0001.md) for more details.
 
 #### Coding style
 
@@ -115,20 +94,14 @@ The CI runs automatic lint checks. See the lint stage in the [Travis CI configur
 
 Code and style related issues are tracked under the [code style and naming](https://github.com/dtr-org/unit-e/labels/code%20style%20and%20naming) label.
 
-##### Actions
-
-* [Merge style guide bits from unit-e-docs repo into standard place in developer notes](https://github.com/dtr-org/unit-e-docs/issues/28)
-* [Document how to apply code style checks](https://github.com/dtr-org/unit-e-docs/issues/29)
-
 #### Upstream integration
 
-[UnitE](https://github.com/dtr-org/unit-e) is a code fork of [Bitcoin Core](https://github.com/bitcoin/bitcoin). The Bitcoin Core code is copied and adapted to the UnitE namings through [clonemachine](https://github.com/dtr-org/clonemachine). Then it is merged with the UnitE specific changes. This is eventually repeated when a new version of Bitcoin Core is released. Not all releases are merged.
+[Unit-e](https://github.com/dtr-org/unit-e) is a code fork of [Bitcoin Core](https://github.com/bitcoin/bitcoin). The Bitcoin Core code is copied and adapted to the Unit-e namings through [clonemachine](https://github.com/dtr-org/unit-e-clonemachine). Then it is merged with the unit-e specific changes. This is repeated when a new version of Bitcoin Core is released.
 
 Possible improvements to the cloning process:
 
-* [Refinements of cloning](https://github.com/dtr-org/unit-e/issues?q=is%3Aissue+is%3Aopen+label%3A%22upstream+sync%22)
+* [Refinements of cloning](https://github.com/dtr-org/unit-e-clonemachine/issues)
 * [Format code according to style guide](https://github.com/dtr-org/unit-e/issues/60)
-* Make sure docs reflect UnitE and not refer to Bitcoin Core, especially when it's about URLs or other pointers
 * CI which does regular runs of clonemachine so that changes in Bitcoin Core which break clonemachine or will cause exceptional work for the merge are detected early
 * Document best practices to avoid creating merge problems (such as using adaptors or structuring files so that they don't create conflicts)
 
@@ -143,9 +116,7 @@ Guidelines covering:
 * Structuring pull request
 * What history to keep and what to squash
 
-##### Actions
-
-* [Document commit guidelines](https://github.com/dtr-org/unit-e-docs/issues/30)
+Documented in the [contribution guidelines](https://github.com/dtr-org/unit-e/blob/master/CONTRIBUTING.md#commit-patches).
 
 #### Review process
 
@@ -155,18 +126,11 @@ All changes have to go through review by at least one other developer.
 
 All changes need to have successful CI runs before they can be merged. This is integrated in the pull request process via the GitHub APIs.
 
-##### Actions
-
-* [Define review process](https://github.com/dtr-org/unit-e-docs/issues/31)
-* [Run tests on pull requests](https://github.com/dtr-org/unit-e-docs/issues/32)
+Documented in the [contribution guidelines](https://github.com/dtr-org/unit-e/blob/master/CONTRIBUTING.md#code-review).
 
 #### Git branches
 
 On which branches to work, release, stable, integration, development branches.
-
-##### Actions
-
-* [Define branching model](https://github.com/dtr-org/unit-e-docs/issues/33)
 
 #### Bug reports and feature requests
 
@@ -186,17 +150,13 @@ Tooling for developers to work on the code. *Needs more details.*
 * Bots, doing mundane tasks such as checking style and formatting, keeping track of issues, etc. Bots need a bit of an identity so that it's clear what they do, who has control, etc. There are teams who [treat bots as team members](https://media.ccc.de/v/ASG2017-130-cyborg_teams).
 * Test network for tests in a production-like scenario
 
-#### Actions
-
-* [Document developer tooling](https://github.com/dtr-org/unit-e-docs/issues/34)
-
 ### Releases
 
-It's all about shipping, so the release process is central and crucial. The UnitE release process will inherit parts from the [Bitcoin release process](https://github.com/bitcoin/bitcoin/blob/master/doc/release-process.md) but be improved and adapted to our needs.
+It's all about shipping, so the release process is central and crucial. The unit-e release process will inherit parts from the [Bitcoin release process](https://github.com/bitcoin/bitcoin/blob/master/doc/release-process.md) but be improved and adapted to our needs. We start with source code only releases for the alpha testnet and later add binary release builds.
 
 Things to be taken care of:
 
-* Changelog, release notes (Bitcoin does it nicely. e.g. their [0.17.0 release notes](https://bitcoin.org/en/release/v0.17.0))
+* [Changelog](https://github.com/dtr-org/unit-e/blob/master/CHANGELOG.md), release notes (Bitcoin does it nicely. e.g. their [0.17.0 release notes](https://bitcoin.org/en/release/v0.17.0))
 * Versioning, need to agree on a scheme, [Semantic Versioning](https://semver.org/) is a popular one (gather input for versioning scheme, major (breaking changes), minor (compatible changes), patch (bug fixes), what about hard fork, soft fork, p2p protocol version, blockchain version)
 * Building release artifacts, binaries to be distributed to users on the various platforms in as native form as possible. This might for example involve packaging for Linux distributions.
 * Where to publish releases? GitHub releases? Own servers?
@@ -206,24 +166,13 @@ Things to be taken care of:
 * Public roadmap and release planning to make it transparent what is happening and what users can expect
 * Define support for older releases (such as providing bug fixes or security fixes)
 
-#### Actions
-
-* [Set up release pipeline](https://github.com/dtr-org/unit-e-docs/issues/35)
-* [Define versioning scheme](https://github.com/dtr-org/unit-e-docs/issues/36)
-* [Roadmap for releases](https://github.com/dtr-org/unit-e-docs/issues/37)
-* [Define support policy](https://github.com/dtr-org/unit-e-docs/issues/38)
-
 ### Security
 
 Security issues need to be handled with special care.
 
-* Way to report security issues privately (security@unit-e.org?)
-* CVE process?
+* Way to report security issues privately (security@dtr.org?)
+* CVE process
 * Security bug bounties (e.g. work with [HackerOne](https://www.hackerone.com/))
-
-#### Actions
-
-* [Set up email address for reporting security issues](https://github.com/dtr-org/unit-e-docs/issues/39)
 
 
 ## User community
@@ -243,7 +192,7 @@ Forums tend to work well for users, the other options work better for developers
 
 ## Contributor community
 
-Contributions can come in many ways. People might contribute code as patches for bug fixes or new features. They also might contribute other things such as documentation, translations, web or graphical design. Or they engage in activities such as user support, bug triaging, promotion. Or they create and run projects which are related to UnitE but are not part of the core, such as additional web sites or services, or alternative clients, wallets, etc.
+Contributions can come in many ways. People might contribute code as patches for bug fixes or new features. They also might contribute other things such as documentation, translations, web or graphical design. Or they engage in activities such as user support, bug triaging, promotion. Or they create and run projects which are related to Unit-e but are not part of the core, such as additional web sites or services, or alternative clients, wallets, etc.
 
 We do want to support all of that in a scalable and sustainable way.
 
@@ -254,10 +203,6 @@ We do want to provide users a path to become contributors and gradually take res
 One of the key factors in retaining new contributors is responsiveness. A [study by Mozilla](https://docs.google.com/presentation/d/1hsJLv1ieSqtXBzd5YZusY-mB8e1VJzaeOmh8Q4VeMio/edit#slide=id.g43d857af8_0177) showed that contributors who got a response in less than 48 hours have an exceptionally high chance of continuing to contribute while contributors who waited more than 7 days almost never came back.
 
 We need to track response times and work out mechanisms how to keep them low.
-
-#### Actions
-
-* [Track response time on issues](https://github.com/dtr-org/unit-e-docs/issues/40)
 
 ### Mentoring
 
@@ -323,11 +268,11 @@ The other effective way is spreading the word:
 
 ## Scaling community
 
-If we do things right we will have a growing community. How do we scale that? We do want valuable projects to be created around UnitE and we do want to increase the number of people involved beyond what we can directly handle in the core team.
+If we do things right we will have a growing community. How do we scale that? We do want valuable projects to be created around Unit-e and we do want to increase the number of people involved beyond what we can directly handle in the core team.
 
 We need to establish a way of cooperation which allows people to do their own work without the need to coordinate closely as it is needed when collaborating on the core software. This extends beyond the purely technical work.
 
-Bicoin is a superb example for projects which grew around it.
+Bitcoin is a superb example for projects which grew around it.
 
 Things to look into:
 
@@ -337,9 +282,10 @@ Things to look into:
   * Alternative clients
   * Network statistics (see [Statoshi](https://statoshi.info/))
   * Performance benchmarks (see https://bitcoinperf.com/about/)
-  * Tracking pull requesrts (see https://bitcoinacks.com/)
+  * Tracking pull requests (see https://bitcoinacks.com/)
 * Support local groups, meetups
 * ...
+
 
 ## Communication channels
 
@@ -354,7 +300,11 @@ Roughly we need three different types of channels:
 
 One important decision is if we want to host infrastructure ourselves or we rely on third party services. A related question is if to rely on services based on proprietary software or if to insist on services based on free software which could be run by ourselves or others as well.
 
-### Tools
+At the beginning we will start with the [Unit-e home page](https://unit-e.io) and the [docs site](https://docs.unit-e.io) for communication going out from the project. The docs site has an [announcement section](https://docs.unit-e.io/announcements.html) for announcement of changes, new releases, etc.
+
+For incoming communication and discussions we will start with using GitHub issues and pull requests.
+
+### Possible Tools
 
 * Home page and other web pages
 * GitHub (issues, pull requests)
@@ -372,10 +322,6 @@ One important decision is if we want to host infrastructure ourselves or we rely
     * [Hangouts](https://hangouts.google.com/)
     * [Appear.in](https://appear.in/)
     * [Zoom](https://zoom.us/) (maybe the best video conferencing option right now, scales to large number of participants)
-
-### Actions
-
-* [Decide on community communication channels](https://github.com/dtr-org/unit-e-docs/issues/41)
 
 
 ## Documentation
@@ -396,10 +342,6 @@ Many end users expect software to be available in their native language. This ca
 Documentation and tools targeted as developers are not translated, but English is used as the standard language. While this might provide some barrier for developers who are not fluent in English, it helps a lot with communication as one community.
 
 See [documentation.md](documentation.md) for details about our approach to translating documentation.
-
-### Actions
-
-* [Translations](https://github.com/dtr-org/unit-e-docs/issues/44)
 
 
 ## Funding
